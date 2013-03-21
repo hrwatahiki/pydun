@@ -20,7 +20,7 @@ _mapimages = None
 _undomanager = None
 
 projecturl = "http://sourceforge.jp/projects/pydun/"
-projectversion = "1.0.0"
+projectversion = "1.0.1"
 
 class MainWindow(QtGui.QMainWindow):
 
