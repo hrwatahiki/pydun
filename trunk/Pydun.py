@@ -119,11 +119,11 @@ class MainWindow(QtGui.QMainWindow):
         else:
             self.redoact.setDisabled(True)
 
-    def setTitle(self, fileName):
-        if fileName == None:
+    def setTitle(self, filename):
+        if filename == None:
             s = u"新規作成"
         else:
-            s = os.path.basename(fileName)
+            s = os.path.basename(filename)
         s ="Pydun - " + s
         self.setWindowTitle(s)
 
@@ -147,35 +147,35 @@ class MainWindow(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def open_triggered(self):
-        fileName = QtGui.QFileDialog.getOpenFileName(
+        filename = QtGui.QFileDialog.getOpenFileName(
             filter=u"*.pydun;;*.*", selectedFilter=u"*.pydun")
-        if fileName[0] != u"":
-            self.open(fileName[0])
+        if filename[0] != u"":
+            self.open(filename[0])
 
-    def open(self, fileName):
-        _mapengine.load(fileName)
+    def open(self, filename):
+        _mapengine.load(filename)
         _undomanager.clear()
         _undomanager.save(_mapengine.savestring())
-        self.setTitle(_mapengine.fileName)
+        self.setTitle(_mapengine.filename)
         self.mainframe.mapframe.repaint()
 
     @QtCore.Slot()
     def save_triggered(self):
-        if _mapengine.fileName:
-            self.save(_mapengine.fileName)
+        if _mapengine.filename:
+            self.save(_mapengine.filename)
         else:
             self.saveas_triggered()
 
     @QtCore.Slot()
     def saveas_triggered(self):
-        fileName = QtGui.QFileDialog.getSaveFileName(
+        filename = QtGui.QFileDialog.getSaveFileName(
             filter=u"*.pydun;;*.*", selectedFilter=u"*.pydun")
-        if fileName[0] != u"":
-            self.save(fileName[0])
+        if filename[0] != u"":
+            self.save(filename[0])
 
-    def save(self, fileName):
-        _mapengine.save(fileName)
-        self.setTitle(_mapengine.fileName)
+    def save(self, filename):
+        _mapengine.save(filename)
+        self.setTitle(_mapengine.filename)
 
     @QtCore.Slot()
     def exit_triggered(self):
@@ -856,6 +856,7 @@ class SetSizeDialog(QtGui.QDialog):
             right = self.rightsize.value()
         return (top, bottom, left, right)
 
+
 class MapImages(object):
     def __init__(self):
         self.wall_images = list()
@@ -864,15 +865,14 @@ class MapImages(object):
             self.wall_images.append(dict())
             self.wall_icons.append(dict())
             for direction in ["v", "h"]:
-                fileName = os.path.join(
+                filename = os.path.join(
                     os.path.dirname(os.path.abspath(__file__)),
                     u"images",
                     u"wall_{direction}_{index:02}.png".format(
                         direction=direction, index=index))
                 self.wall_images[index][direction] = QtGui.QImage()
-                self.wall_images[index][direction].load(fileName)
-                self.wall_icons[index][direction] = QtGui.QIcon(fileName)
-
+                self.wall_images[index][direction].load(filename)
+                self.wall_icons[index][direction] = QtGui.QIcon(filename)
 
     @property
     def width(self):
@@ -905,7 +905,7 @@ class MapEngine(object):
         self._signy = signy
         self._offsetx = offsetx
         self._offsety = offsety
-        self.fileName = None
+        self.filename = None
 
         self.initdata()
         self.inityaml()
@@ -1123,10 +1123,11 @@ class MapEngine(object):
             offsety = 1
         return (offsetx, offsety)
 
-    def save(self, fileName):
+    def save(self, filename):
         dt = self.savestring()
-        with codecs.open(fileName, "w", encoding="utf-8") as f:
+        with codecs.open(filename, "w", encoding="utf-8") as f:
             f.write(dt)
+            self.filename = filename
 
     def savestring(self):
         data = dict()
@@ -1173,11 +1174,11 @@ class MapEngine(object):
         m.append("".join(s))
         return m
 
-    def load(self, fileName):
-        with codecs.open(fileName, "r", encoding="utf-8") as f:
+    def load(self, filename):
+        with codecs.open(filename, "r", encoding="utf-8") as f:
             st = f.read()
         self.loadfromstring(st)
-        self.fileName = fileName
+        self.filename = filename
 
     def loadfromstring(self, st):
         data = yaml.safe_load(st)
