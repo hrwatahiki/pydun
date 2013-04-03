@@ -20,7 +20,7 @@ _mapimages = None
 _undomanager = None
 
 projecturl = "http://sourceforge.jp/projects/pydun/"
-projectversion = "1.0.1"
+projectversion = "1.0.2"
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -62,7 +62,7 @@ class MainWindow(QtGui.QMainWindow):
         openact.setShortcut(QtGui.QKeySequence.Open)
         filemenu.addAction(openact)
 
-        saveact = QtGui.QAction(u"保存(&S)", self)
+        saveact = QtGui.QAction(u"上書き保存(&S)", self)
         saveact.triggered.connect(self.save_triggered)
         saveact.setShortcut(QtGui.QKeySequence.Save)
         filemenu.addAction(saveact)
@@ -97,7 +97,7 @@ class MainWindow(QtGui.QMainWindow):
 
         #Help menu
         helpmenu = self.menuBar().addMenu(u"ヘルプ(&H)")
-        tutorialact = QtGui.QAction(u"チュートリアル(&T)", self)
+        tutorialact = QtGui.QAction(u"ヘルプの表示(&H)", self)
         tutorialact.triggered.connect(self.tutorial_triggered)
         tutorialact.setShortcut(QtGui.QKeySequence.HelpContents)
         helpmenu.addAction(tutorialact)
