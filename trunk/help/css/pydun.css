@@ -1,0 +1,23 @@
+h2 {
+    border-left-style: solid;
+    border-left-width: thick;
+    border-left-color: green;
+    padding-left: 0.25em;
+    border-bottom-style: solid;
+    border-bottom-width: medium;
+    border-bottom-color: green;
+}
+.dialog {
+    vertical-align: top;
+}
+.menu {
+    position: fixed;
+    width: 20%;
+}
+.content {
+    float: right;
+    width: 80%;
+}
+.history tr * {
+    padding: 0.25em;
+}
