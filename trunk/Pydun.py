@@ -1125,7 +1125,7 @@ class MapEngine(object):
 
     def save(self, filename):
         dt = self.savestring()
-        with codecs.open(filename, "w", encoding="utf-8") as f:
+        with codecs.open(filename, "w") as f:
             f.write(dt)
             self.filename = filename
 
