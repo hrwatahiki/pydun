@@ -10,6 +10,7 @@
 import sys
 import os.path
 import codecs
+import locale
 import webbrowser
 from PySide import QtCore, QtGui
 import yaml
@@ -20,7 +21,8 @@ _mapimages = None
 _undomanager = None
 
 projecturl = "http://sourceforge.jp/projects/pydun/"
-projectversion = "1.0.2"
+projectversion = "1.0.3"
+
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -35,11 +37,9 @@ class MainWindow(QtGui.QMainWindow):
         self.setmenu()
         _undomanager.changed.connect(self.updateundostate)
 
-        if len(sys.argv) <= 2:
-            self.new()
-        else:
-            self.open(sys.argv[2])
-
+        self.new()
+        if len(sys.argv) >= 2:
+            self.open(unicode(sys.argv[1], locale.getpreferredencoding()))
 
         self.mainframe = MainFrame(self)
         self.setCentralWidget(self.mainframe)
@@ -47,6 +47,11 @@ class MainWindow(QtGui.QMainWindow):
         self.statusbar = QtGui.QStatusBar(self)
         self.statusbar.showMessage(u"")
         self.setStatusBar(self.statusbar)
+        if "windowSize" in config:
+            self.resize(
+                QtCore.QSize(
+                    config["windowSize"]["width"],
+                    config["windowSize"]["height"]))
 
     def setmenu(self):
         #File menu
@@ -157,7 +162,10 @@ class MainWindow(QtGui.QMainWindow):
         _undomanager.clear()
         _undomanager.save(_mapengine.savestring())
         self.setTitle(_mapengine.filename)
-        self.mainframe.mapframe.repaint()
+        try:
+            self.mainframe.mapframe.repaint()
+        except:
+            pass
 
     @QtCore.Slot()
     def save_triggered(self):
@@ -188,9 +196,16 @@ class MainWindow(QtGui.QMainWindow):
             event.ignore()
 
     def exit(self):
+        global config
+        global configfilename
         if QtGui.QMessageBox.Ok == QtGui.QMessageBox.question(
             self, u"確認", u"終了しますか?",
             (QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)):
+            config["windowSize"] = dict()
+            config["windowSize"]["width"] = self.size().width()
+            config["windowSize"]["height"] = self.size().height()
+            with open(configfilename, "w") as f:
+                yaml.safe_dump(config, f, default_flow_style=False)
             sys.exit()
             return True
         return False
@@ -405,7 +420,9 @@ class MainFrame(QtGui.QFrame):
 
     @QtCore.Slot()
     def setbackcolorbutton_clicked(self):
-        dlg = QtGui.QColorDialog(self)
+        global config
+        dlg = PydunColorDialog(self, config.get("customColor", dict()))
+        dlg.setCurrentColor(self.backcolorbox.color)
         dlg.exec_()
         if dlg.result() == QtGui.QDialog.Accepted:
             self.backcolorbox.color = dlg.currentColor()
@@ -657,7 +674,9 @@ class DetailDialog(QtGui.QDialog):
         self.forecolorbox.color = color
 
     def forecolorbutton_clicked(self):
-        dlg = QtGui.QColorDialog(self)
+        global config
+        dlg = PydunColorDialog(self, config.get("customColor", dict()))
+        dlg.setCurrentColor(self.forecolorbox.color)
         dlg.exec_()
         if dlg.result() == QtGui.QDialog.Accepted:
             self.forecolorbox.color = dlg.currentColor()
@@ -1259,6 +1278,22 @@ class UndoManager(QtCore.QObject):
         return (self._undocount > 0)
 
 
+class PydunColorDialog(QtGui.QColorDialog):
+    def __init__(self, parent, config):
+        super(PydunColorDialog, self).__init__(parent)
+        for index in range(self.customCount()):
+            self.setCustomColor(index,
+                getcolorfromstring(
+                    config.get(index, "#FFFFFF")).rgb())
+
+    def exec_(self):
+        super(PydunColorDialog, self).exec_()
+        config["customColor"] = dict()
+        for index in range(self.customCount()):
+            config["customColor"][index] = getcolorstring(
+                QtGui.QColor.fromRgb(self.customColor(index)))
+
+
 def getcolorstring(color):
     return "#{r:02x}{g:02x}{b:02x}".format(r=color.red(), g=color.green(), b=color.blue())
 
@@ -1270,12 +1305,24 @@ def getcolorfromstring(colorstring):
 
 
 def main():
+    loadconfig()
     app = QtGui.QApplication(sys.argv)
     mainWin = MainWindow()
     app.installEventFilter(mainWin.centralWidget().mapframe)
     mainWin.show()
     sys.exit(app.exec_())
 
+def loadconfig():
+    global config
+    global configfilename
+    configfilename = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        u"Pydun.config")
+    try:
+        with open(configfilename, "r") as f:
+            config = yaml.safe_load(f)
+    except:
+        config = dict()
 
 if __name__ == '__main__':
     main()
