@@ -435,7 +435,8 @@ class MainFrame(QtGui.QFrame):
         global config
         dlg = PydunColorDialog(self, config.get("customColor", dict()))
         dlg.setCurrentColor(self.backcolorbox.color)
-        dlg.exec_(config)
+        dlg.exec_()
+        config["customColor"] = dlg.config
         if dlg.result() == QtGui.QDialog.Accepted:
             self.backcolorbox.color = dlg.currentColor()
             self.backcolorbutton.setChecked(True)
@@ -689,7 +690,8 @@ class DetailDialog(QtGui.QDialog):
         global config
         dlg = PydunColorDialog(self, config.get("customColor", dict()))
         dlg.setCurrentColor(self.forecolorbox.color)
-        dlg.exec_(config)
+        dlg.exec_()
+        config["customColor"] = dlg.config
         if dlg.result() == QtGui.QDialog.Accepted:
             self.forecolorbox.color = dlg.currentColor()
 
@@ -1297,15 +1299,23 @@ class PydunColorDialog(QtGui.QColorDialog):
             self.setCustomColor(index,
                 getcolorfromstring(
                     config.get(index, "#FFFFFF")).rgb())
-
-    def exec_(self, config):
-        super(PydunColorDialog, self).exec_()
-        config = dict()
+        self.updateconfig()
+        
+    def updateconfig(self):
+        self._config = dict()
         for index in range(self.customCount()):
-            config[index] = getcolorstring(
+            self._config[index] = getcolorstring(
                 QtGui.QColor.fromRgb(self.customColor(index)))
+                    
+    def exec_(self):
+        super(PydunColorDialog, self).exec_()
+        self.updateconfig()
 
-
+    @property
+    def config(self):
+        return self._config
+        
+        
 def getcolorstring(color):
     return "#{r:02x}{g:02x}{b:02x}".format(r=color.red(), g=color.green(), b=color.blue())
 
