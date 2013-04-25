@@ -152,7 +152,13 @@ class MainWindow(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def open_triggered(self):
+        d = ""
+        try:
+            d = os.path.dirname(_mapengine.filename)
+        except:
+            pass
         filename = QtGui.QFileDialog.getOpenFileName(
+            dir=d,
             filter=u"*.pydun;;*.*", selectedFilter=u"*.pydun")
         if filename[0] != u"":
             self.open(filename[0])
@@ -176,7 +182,13 @@ class MainWindow(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def saveas_triggered(self):
+        d = ""
+        try:
+            d = os.path.dirname(_mapengine.filename)
+        except:
+            pass
         filename = QtGui.QFileDialog.getSaveFileName(
+            dir=d,
             filter=u"*.pydun;;*.*", selectedFilter=u"*.pydun")
         if filename[0] != u"":
             self.save(filename[0])
@@ -423,7 +435,7 @@ class MainFrame(QtGui.QFrame):
         global config
         dlg = PydunColorDialog(self, config.get("customColor", dict()))
         dlg.setCurrentColor(self.backcolorbox.color)
-        dlg.exec_()
+        dlg.exec_(config)
         if dlg.result() == QtGui.QDialog.Accepted:
             self.backcolorbox.color = dlg.currentColor()
             self.backcolorbutton.setChecked(True)
@@ -677,7 +689,7 @@ class DetailDialog(QtGui.QDialog):
         global config
         dlg = PydunColorDialog(self, config.get("customColor", dict()))
         dlg.setCurrentColor(self.forecolorbox.color)
-        dlg.exec_()
+        dlg.exec_(config)
         if dlg.result() == QtGui.QDialog.Accepted:
             self.forecolorbox.color = dlg.currentColor()
 
@@ -1286,11 +1298,11 @@ class PydunColorDialog(QtGui.QColorDialog):
                 getcolorfromstring(
                     config.get(index, "#FFFFFF")).rgb())
 
-    def exec_(self):
+    def exec_(self, config):
         super(PydunColorDialog, self).exec_()
-        config["customColor"] = dict()
+        config = dict()
         for index in range(self.customCount()):
-            config["customColor"][index] = getcolorstring(
+            config[index] = getcolorstring(
                 QtGui.QColor.fromRgb(self.customColor(index)))
 
 
