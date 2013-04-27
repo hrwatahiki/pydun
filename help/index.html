@@ -37,11 +37,16 @@
             <h2 id="cood">座標設定</h2>
                 <p>メニューの[編集]-[座標設定]から、座標の基準点を変更できます。[座標設定]を選択後、メイン画面の基準点をクリックすると、座標入力ダイアログが出てきますので、座標を入力してください。座標は+999から-999まで入力できます。</p>
                 <img src="./images/cood.png" alt="座標設定ダイアログ">
+            <h2 id="sendto">[送る]への登録</h2>
+                <p>*.pydunを右クリックして、[送る]-[Pydun.exe]で起動直後にそのファイルを開くことができます。これを行うためには、あらかじめ、ユーザーフォルダーの中にある[SendTo]フォルダーに[Pydun.exe]のショートカットをコピーする必要があります。[SendTo]フォルダーの位置はOSによって違います。</p>
+                <ul>
+                    <li>XPならば、[C:\Documents and Settings\ユーザー名\SendTo]</li>
+                    <li>Vista, 7, 8ならば、[C:\Users\ユーザー名\AppData\Roaming\Microsoft\Windows\SendTo]</li>
+                </ul>
             <h2 id="detail">仕様詳細</h2>
                 <ul>
                     <li>保存ファイルはテキスト形式(yaml)です。メモ帳などのエディタで開くことができます。</li>
                     <li>[元に戻す]は127回まで戻ることができます。</li>
-                    <li>*.pydunを右クリックして、[送る]-[Pydun.exe]で起動直後にそのファイルを開くことができます。これを行うためには、あらかじめ、ユーザーフォルダーの中にある[SendTo]フォルダーに[Pydun.exe]のショートカットをコピーする必要があります。[SendTo]ユーザーフォルダー、[SendTo]フォルダーの位置はOSによって違いますので、詳細はご自分でお調べください。</li>
                 </ul>
             <h2 id="history">変更来歴</h2>
                 <table class="history">
@@ -49,7 +54,7 @@
                         <th>バージョン</th><th>公開日</th><th>内容</th>
                     </tr>
                     <tr>
-                        <td>1.0.3</td><td>2013-04-25</td><td>いわゆる「送る」に対応。設定保存機能を追加。</td>
+                        <td>1.0.3</td><td>2013-04-26</td><td>いわゆる[送る]に対応。設定保存機能を追加。</td>
                     </tr>
                     <tr>
                         <td>1.0.2</td><td>2013-04-13</td><td>詳細に漢字があると保存に失敗するのを修正。メニュー表記の見直し。ヘルプの追記。</td>
@@ -71,6 +76,7 @@
             <li><a href="./index.html#usage">使い方(チュートリアル)</a></li>
             <li><a href="./index.html#mapsize">マップのサイズ</a></li>
             <li><a href="./index.html#cood">座標設定</a></li>
+            <li><a href="./index.html#sendto">[送る]への登録</a></li>
             <li><a href="./index.html#detail">仕様詳細</a></li>
             <li><a href="./index.html#history">変更来歴</a></li>
         </ul>
