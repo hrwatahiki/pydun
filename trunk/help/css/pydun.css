@@ -1,3 +1,6 @@
+* {
+    line-height: 1.5em;
+}
 h2 {
     border-left-style: solid;
     border-left-width: thick;
