@@ -1300,13 +1300,13 @@ class PydunColorDialog(QtGui.QColorDialog):
                 getcolorfromstring(
                     config.get(index, "#FFFFFF")).rgb())
         self.updateconfig()
-        
+
     def updateconfig(self):
         self._config = dict()
         for index in range(self.customCount()):
             self._config[index] = getcolorstring(
                 QtGui.QColor.fromRgb(self.customColor(index)))
-                    
+
     def exec_(self):
         super(PydunColorDialog, self).exec_()
         self.updateconfig()
@@ -1314,8 +1314,8 @@ class PydunColorDialog(QtGui.QColorDialog):
     @property
     def config(self):
         return self._config
-        
-        
+
+
 def getcolorstring(color):
     return "#{r:02x}{g:02x}{b:02x}".format(r=color.red(), g=color.green(), b=color.blue())
 
