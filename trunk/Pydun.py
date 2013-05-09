@@ -471,15 +471,15 @@ class MapFrame(QtGui.QFrame):
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
         painter.fillRect(0, 0, self.width(), self.height(), QtGui.QColor(255, 255, 255))
-        w = _mapimages.width
-        v = _mapimages.height
+        w = _mapimages.width - 1
+        v = _mapimages.height - 1
         ho = _mapimages.heightoffset
         wo = _mapimages.widthoffset
 
         #エリアサイズを再計算
         self.resize(
-            _mapimages.width * (_mapengine.width) + _mapimages.widthoffset * 2,
-            _mapimages.height * (_mapengine.height) + _mapimages.heightoffset * 2
+            w * (_mapengine.width) + _mapimages.widthoffset * 2,
+            v * (_mapengine.height) + _mapimages.heightoffset * 2
         )
 
         #backcolor
@@ -492,21 +492,33 @@ class MapFrame(QtGui.QFrame):
                     painter.fillRect(wo + xx, ho + yy, w, v,
                         getcolorfromstring(backcolor))
 
-        #wall
+        #grid
         for x in range(_mapengine.width + 1):
             xx = x * w
             for y in range(_mapengine.height + 1):
                 yy = y * v
                 if x != _mapengine.width:
                     painter.drawImage(wo + xx, yy,
-                        _mapimages.wall(_mapengine.getdata(x, y, "h"), "h"))
+                        _mapimages.wall(0, "h"))
                 if y != _mapengine.height:
+                    painter.drawImage(xx, ho + yy,
+                        _mapimages.wall(0, "v"))
+
+        #wall(gridは描画しない)
+        for x in range(_mapengine.width + 1):
+            xx = x * w
+            for y in range(_mapengine.height + 1):
+                yy = y * v
+                if x != _mapengine.width and _mapengine.getdata(x, y, "h") != 0:
+                    painter.drawImage(wo + xx, yy,
+                        _mapimages.wall(_mapengine.getdata(x, y, "h"), "h"))
+                if y != _mapengine.height and _mapengine.getdata(x, y, "v") != 0:
                     painter.drawImage(xx, ho + yy,
                         _mapimages.wall(_mapengine.getdata(x, y, "v"), "v"))
                 mark = _mapengine.getmark(x, y)
                 if mark != "":
                     painter.setPen(getcolorfromstring(_mapengine.getforecolor(x, y)))
-                    painter.drawText(wo + xx + 1, ho + yy + 1, w - 2, v - 2,
+                    painter.drawText(wo + xx + 2, ho + yy + 2, w - 2, v - 2,
                         QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter,
                         mark)
 
@@ -530,10 +542,10 @@ class MapFrame(QtGui.QFrame):
 
     def eventFilter(self, obj, event):
         def xpos():
-            return ((event.pos().x() - _mapimages.widthoffset) // _mapimages.width)
+            return ((event.pos().x() - _mapimages.widthoffset) // (_mapimages.width - 1))
 
         def ypos():
-            return ((event.pos().y() - _mapimages.heightoffset) // _mapimages.height)
+            return ((event.pos().y() - _mapimages.heightoffset) // (_mapimages.height - 1))
 
         if obj == self:
             et = event.type()
@@ -584,21 +596,23 @@ class MapFrame(QtGui.QFrame):
                     self.mouse_drag_released.emit(
                         self._x1, self._y1, self._x2, self._y2, eraseonly)
                 if release_emit:
-                    rpx = self._px2 - self._x2 * _mapimages.width - _mapimages.widthoffset
-                    rpy = self._py2 - self._y2 * _mapimages.height - _mapimages.heightoffset
-                    if rpx <= _mapimages.widthoffset:
+                    rpx = self._px2 - self._x2 * (_mapimages.width - 1) - _mapimages.widthoffset
+                    rpy = self._py2 - self._y2 * (_mapimages.height - 1) - _mapimages.heightoffset
+                    rdx = rpx - (_mapimages.width - 1) // 2
+                    rdy = rpy - (_mapimages.height - 1) // 2
+                    if rpx <= _mapimages.widthoffset and abs(rdx) > abs(rdy):
                         rx = self._x2
                         ry = self._y2
                         d = "v"
-                    elif rpx >= _mapimages.width - _mapimages.widthoffset:
+                    elif rpx >= _mapimages.width - _mapimages.widthoffset and abs(rdx) > abs(rdy):
                         rx = self._x2 + 1
                         ry = self._y2
                         d = "v"
-                    elif rpy <= _mapimages.heightoffset:
+                    elif rpy <= _mapimages.heightoffset and abs(rdx) <= abs(rdy):
                         rx = self._x2
                         ry = self._y2
                         d = "h"
-                    elif rpy >= _mapimages.height - _mapimages.heightoffset:
+                    elif rpy >= _mapimages.height - _mapimages.heightoffset and abs(rdx) <= abs(rdy):
                         rx = self._x2
                         ry = self._y2 + 1
                         d = "h"
