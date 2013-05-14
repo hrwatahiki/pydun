@@ -260,7 +260,7 @@ class MainWindow(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def tutorial_triggered(self):
-        url = os.path.dirname(os.path.abspath(__file__)) + "/help/index.html"
+        url = basedir() + "/help/index.html"
         webbrowser.open_new_tab(url)
 
     @QtCore.Slot()
@@ -695,7 +695,7 @@ class DetailDialog(QtGui.QDialog):
         self.setModal(True)
 
     def setvalue(self, x, y, mark, detail, color):
-        self.setWindowTitle("({x},{y})".format(x=x, y=y))
+        self.setWindowTitle("({x}, {y})".format(x=x, y=y))
         self.marktext.setText(mark)
         self.detailtext.setText(detail)
         self.forecolorbox.color = color
@@ -708,6 +708,7 @@ class DetailDialog(QtGui.QDialog):
         config["customColor"] = dlg.config
         if dlg.result() == QtGui.QDialog.Accepted:
             self.forecolorbox.color = dlg.currentColor()
+
 
 class SetOrigineDialog(QtGui.QDialog):
     def __init__(self, parent=None):
@@ -913,7 +914,7 @@ class MapImages(object):
             self.wall_icons.append(dict())
             for direction in ["v", "h"]:
                 filename = os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)),
+                    basedir(),
                     u"images",
                     u"wall_{direction}_{index:02}.png".format(
                         direction=direction, index=index))
@@ -1339,6 +1340,8 @@ def getcolorfromstring(colorstring):
         int(colorstring[3:5], 16),
         int(colorstring[5:7], 16))
 
+def basedir():
+    return os.path.dirname(os.path.abspath(sys.argv[0]))
 
 def main():
     loadconfig()
@@ -1352,7 +1355,7 @@ def loadconfig():
     global config
     global configfilename
     configfilename = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
+        basedir(),
         u"Pydun.config")
     try:
         with open(configfilename, "r") as f:
