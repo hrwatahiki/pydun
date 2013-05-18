@@ -1352,7 +1352,7 @@ def getcolorfromstring(colorstring):
         int(colorstring[5:7], 16))
 
 def basedir():
-    return os.path.dirname(os.path.abspath(sys.argv[0]))
+    return os.path.dirname(os.path.abspath(unicode(sys.argv[0], locale.getpreferredencoding())))
 
 def getlatestversion():
     try:
