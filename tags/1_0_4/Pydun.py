@@ -11,6 +11,8 @@ import sys
 import os.path
 import codecs
 import locale
+import urllib
+import xml.etree.ElementTree
 import webbrowser
 from PySide import QtCore, QtGui
 import yaml
@@ -21,6 +23,7 @@ _mapimages = None
 _undomanager = None
 
 projecturl = "http://sourceforge.jp/projects/pydun/"
+projectrssurl = "http://sourceforge.jp/projects/pydun/releases/rss"
 projectversion = "1.0.4"
 
 
@@ -325,6 +328,12 @@ class MainFrame(QtGui.QFrame):
         self.backcolorbox.setSizePolicy(
             QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
 
+        latestversion = getlatestversion()
+        if latestversion != projectversion:
+            self.update = QtGui.QLabel(self)
+            self.update.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+            self.update.setText(u"<a href='{url}'>最新のPydun({ver})がダウンロードできます。</a>".format(url=projecturl, ver=latestversion))
+            self.update.setOpenExternalLinks(True)
 
         layout = QtGui.QGridLayout(self)
         layout.addWidget(scrollarea, 0, 0, 1, 3)
@@ -334,6 +343,8 @@ class MainFrame(QtGui.QFrame):
         layout.addWidget(self.backcolorbutton, 3, 1, 1, 2)
         layout.addWidget(self.setbackcolorbutton, 4, 1, 1, 1)
         layout.addWidget(self.backcolorbox, 4, 2, 1, 1)
+        if latestversion != projectversion:
+            layout.addWidget(self.update, 5, 0, 1, 3)
 
         self.setLayout(layout)
 
@@ -1342,6 +1353,19 @@ def getcolorfromstring(colorstring):
 
 def basedir():
     return os.path.dirname(os.path.abspath(sys.argv[0]))
+
+def getlatestversion():
+    try:
+        rss = urllib.urlopen(projectrssurl)
+        rssstring = rss.read()
+        rsstree = xml.etree.ElementTree.fromstring(rssstring)
+        item = rsstree.find("channel/item/title")
+        ver = (item.text.split(" "))[2]
+        rss.close()
+    except:
+        ver = projectversion
+    return ver
+
 
 def main():
     loadconfig()
