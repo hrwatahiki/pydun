@@ -24,7 +24,7 @@ _undomanager = None
 
 projecturl = "http://sourceforge.jp/projects/pydun/"
 projectrssurl = "http://sourceforge.jp/projects/pydun/releases/rss"
-projectversion = "1.0.4"
+projectversion = "1.0.5"
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -128,48 +128,62 @@ class MainWindow(QtGui.QMainWindow):
             self.redoact.setDisabled(True)
 
     def setTitle(self, filename):
+        s ="Pydun - " + self.getfilename(filename)
+        self.setWindowTitle(s)
+
+    def getfilename(self, filename):
         if filename == None:
             s = u"新規作成"
         else:
             s = os.path.basename(filename)
-        s ="Pydun - " + s
-        self.setWindowTitle(s)
+        return s
 
     @QtCore.Slot()
     def new_triggered(self):
-        if QtGui.QMessageBox.Ok == QtGui.QMessageBox.question(
-            self, u"確認", u"新しいマップを作成しますか?",
-            (QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)):
+        if self.confirmdiscarding():
             self.new()
+            return True
+        return False
 
     def new(self):
         global _mapengine
         _mapengine = MapEngine(20, 20, 1, -1, 0, +19)
-        _undomanager.clear()
-        _undomanager.save(_mapengine.savestring())
+        _undomanager.init(_mapengine.savestring())
         self.setTitle(None)
         try:
             self.mainframe.mapframe.repaint()
         except:
             pass
 
+    def confirmdiscarding(self):
+        if not _undomanager.commited:
+            dlg = PydunAskSaveDialog(self, self.getfilename(_mapengine.filename))
+            ret = dlg.exec_()
+            if ret == QtGui.QMessageBox.Cancel:
+                return False
+            elif ret == QtGui.QMessageBox.Save:
+                saved = self.save_triggered()
+                if not saved:
+                    return False
+        return True
+
     @QtCore.Slot()
     def open_triggered(self):
-        d = ""
-        try:
-            d = os.path.dirname(_mapengine.filename)
-        except:
-            pass
-        filename = QtGui.QFileDialog.getOpenFileName(
-            dir=d,
-            filter=u"*.pydun;;*.*", selectedFilter=u"*.pydun")
-        if filename[0] != u"":
-            self.open(filename[0])
+        if self.confirmdiscarding():
+            d = ""
+            try:
+                d = os.path.dirname(_mapengine.filename)
+            except:
+                pass
+            filename = QtGui.QFileDialog.getOpenFileName(
+                dir=d,
+                filter=u"*.pydun;;*.*", selectedFilter=u"*.pydun")
+            if filename[0] != u"":
+                self.open(filename[0])
 
     def open(self, filename):
         _mapengine.load(filename)
-        _undomanager.clear()
-        _undomanager.save(_mapengine.savestring())
+        _undomanager.init(_mapengine.savestring())
         self.setTitle(_mapengine.filename)
         try:
             self.mainframe.mapframe.repaint()
@@ -180,8 +194,10 @@ class MainWindow(QtGui.QMainWindow):
     def save_triggered(self):
         if _mapengine.filename:
             self.save(_mapengine.filename)
+            saved = True
         else:
-            self.saveas_triggered()
+            saved = self.saveas_triggered()
+        return saved
 
     @QtCore.Slot()
     def saveas_triggered(self):
@@ -195,9 +211,13 @@ class MainWindow(QtGui.QMainWindow):
             filter=u"*.pydun;;*.*", selectedFilter=u"*.pydun")
         if filename[0] != u"":
             self.save(filename[0])
+            return True
+        else:
+            return False
 
     def save(self, filename):
         _mapengine.save(filename)
+        _undomanager.commit()
         self.setTitle(_mapengine.filename)
 
     @QtCore.Slot()
@@ -213,9 +233,7 @@ class MainWindow(QtGui.QMainWindow):
     def exit(self):
         global config
         global configfilename
-        if QtGui.QMessageBox.Ok == QtGui.QMessageBox.question(
-            self, u"確認", u"終了しますか?",
-            (QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)):
+        if self.confirmdiscarding():
             config["windowSize"] = dict()
             config["windowSize"]["width"] = self.size().width()
             config["windowSize"]["height"] = self.size().height()
@@ -757,10 +775,12 @@ class SetOrigineDialog(QtGui.QDialog):
         self.ybox.setValue(0)
         ylabel.setBuddy(self.ybox)
 
-        self.buttonBox = QtGui.QDialogButtonBox(
+        self.buttonbox = QtGui.QDialogButtonBox(
             QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
+        self.buttonbox.accepted.connect(self.accept)
+        self.buttonbox.rejected.connect(self.reject)
+        self.buttonbox.button(QtGui.QDialogButtonBox.Ok).setText(u"OK")
+        self.buttonbox.button(QtGui.QDialogButtonBox.Cancel).setText(u"キャンセル")
 
         layout = QtGui.QGridLayout()
         layout.addWidget(promptlabel, 0, 0, 1, 4)
@@ -769,7 +789,7 @@ class SetOrigineDialog(QtGui.QDialog):
         layout.addWidget(self.xbox, 2, 1, 1, 1)
         layout.addWidget(ylabel, 2, 2, 1, 1)
         layout.addWidget(self.ybox, 2, 3, 1, 1)
-        layout.addWidget(self.buttonBox, 3, 0, 1, 4)
+        layout.addWidget(self.buttonbox, 3, 0, 1, 4)
         self.setLayout(layout)
         self.setModal(True)
 
@@ -837,6 +857,8 @@ class SetSizeDialog(QtGui.QDialog):
         QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
         self.buttonbox.accepted.connect(self.accept)
         self.buttonbox.rejected.connect(self.reject)
+        self.buttonbox.button(QtGui.QDialogButtonBox.Ok).setText(u"OK")
+        self.buttonbox.button(QtGui.QDialogButtonBox.Cancel).setText(u"キャンセル")
 
         verticalgroup = QtGui.QButtonGroup(self)
         verticalgroup.addButton(self.topbutton)
@@ -1285,7 +1307,13 @@ class UndoManager(QtCore.QObject):
         self._undo = [None for x in range(self.MAX_UNDO_COUNT)]
         self._index = 0
         self._undocount = 0
+        self._commited = True
         self.changed.emit(self.canundo, self.canredo)
+
+    def init(self, data):
+        self.clear()
+        self.save(data)
+        self._commited = True
 
     def save(self, obj):
         if self._index >= self.MAX_UNDO_COUNT:
@@ -1295,19 +1323,25 @@ class UndoManager(QtCore.QObject):
         self._undo[self._index] = obj
         self._index += 1
         self._undocount = 0
+        self._commited = False
         self.changed.emit(self.canundo, self.canredo)
 
     def undo(self):
         self._index -= 1
         self._undocount += 1
+        self._commited = False
         self.changed.emit(self.canundo, self.canredo)
         return self._undo[self._index - 1]
 
     def redo(self):
         self._index += 1
         self._undocount -= 1
+        self._commited = False
         self.changed.emit(self.canundo, self.canredo)
         return self._undo[self._index - 1]
+
+    def commit(self):
+        self._commited = True
 
     @property
     def canundo(self):
@@ -1316,6 +1350,10 @@ class UndoManager(QtCore.QObject):
     @property
     def canredo(self):
         return (self._undocount > 0)
+
+    @property
+    def commited(self):
+        return self._commited
 
 
 class PydunColorDialog(QtGui.QColorDialog):
@@ -1340,6 +1378,17 @@ class PydunColorDialog(QtGui.QColorDialog):
     @property
     def config(self):
         return self._config
+
+
+class PydunAskSaveDialog(QtGui.QMessageBox):
+    def __init__(self, parent, filename):
+        super(PydunAskSaveDialog, self).__init__(parent)
+        self.setText(u"{filename} への変更を保存しますか?".format(filename=filename))
+        self.setStandardButtons(QtGui.QMessageBox.Save | QtGui.QMessageBox.Discard | QtGui.QMessageBox.Cancel)
+        self.setDefaultButton(QtGui.QMessageBox.Save)
+        self.button(QtGui.QMessageBox.Save).setText(u"保存する(&S)")
+        self.button(QtGui.QMessageBox.Discard).setText(u"保存しない(&N)")
+        self.button(QtGui.QMessageBox.Cancel).setText(u"キャンセル")
 
 
 def getcolorstring(color):
