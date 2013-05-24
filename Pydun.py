@@ -707,10 +707,12 @@ class DetailDialog(QtGui.QDialog):
         self.detailtext.setText(u"")
         detaillabel.setBuddy(self.detailtext)
 
-        self.buttonBox = QtGui.QDialogButtonBox(
+        self.buttonbox = QtGui.QDialogButtonBox(
             QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
+        self.buttonbox.accepted.connect(self.accept)
+        self.buttonbox.rejected.connect(self.reject)
+        self.buttonbox.button(QtGui.QDialogButtonBox.Ok).setText(u"OK")
+        self.buttonbox.button(QtGui.QDialogButtonBox.Cancel).setText(u"キャンセル")
 
         layout = QtGui.QGridLayout()
         layout.addWidget(marklabel, 0, 0, 1, 1)
@@ -719,7 +721,7 @@ class DetailDialog(QtGui.QDialog):
         layout.addWidget(self.forecolorbox, 0, 3, 1, 1)
         layout.addWidget(detaillabel, 1, 0, 1, 1)
         layout.addWidget(self.detailtext, 1, 1, 1, 3)
-        layout.addWidget(self.buttonBox, 2, 0, 1, 4)
+        layout.addWidget(self.buttonbox, 2, 0, 1, 4)
         self.setLayout(layout)
         self.setModal(True)
 
