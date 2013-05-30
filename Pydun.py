@@ -380,7 +380,7 @@ class MainFrame(QtGui.QFrame):
     def create_wall_menu(self, direction):
         menu = QtGui.QMenu(self)
         for idx, img in enumerate(_mapimages.wall_icons):
-            act = QtGui.QAction(self)
+            act = QtGui.QAction(_mapimages.wall_texts[idx][direction], self)
             act.setIcon(img[direction])
 
             def triggerd(idx):
@@ -942,11 +942,15 @@ class SetSizeDialog(QtGui.QDialog):
 
 class MapImages(object):
     def __init__(self):
+        vtext = [u"なし", u"壁", u"扉", u"扉(→)", u"扉(←)", u"一通(→)", u"一通(←)", u"隠", u"隠(→)", u"隠(←)",]
+        htext = [u"なし", u"壁", u"扉", u"扉(↓)", u"扉(↑)", u"一通(↓)", u"一通(↑)", u"隠", u"隠(↓)", u"隠(↑)",]
         self.wall_images = list()
         self.wall_icons = list()
+        self.wall_texts = list()
         for index in range(10):
             self.wall_images.append(dict())
             self.wall_icons.append(dict())
+            self.wall_texts.append(dict())
             for direction in ["v", "h"]:
                 filename = os.path.join(
                     basedir(),
@@ -956,6 +960,8 @@ class MapImages(object):
                 self.wall_images[index][direction] = QtGui.QImage()
                 self.wall_images[index][direction].load(filename)
                 self.wall_icons[index][direction] = QtGui.QIcon(filename)
+            self.wall_texts[index]["v"] = vtext[index]
+            self.wall_texts[index]["h"] = htext[index]
 
     @property
     def width(self):
