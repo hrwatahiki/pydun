@@ -942,8 +942,10 @@ class SetSizeDialog(QtGui.QDialog):
 
 class MapImages(object):
     def __init__(self):
-        vtext = [u"なし", u"壁", u"扉", u"扉(→)", u"扉(←)", u"一通(→)", u"一通(←)", u"隠", u"隠(→)", u"隠(←)",]
-        htext = [u"なし", u"壁", u"扉", u"扉(↓)", u"扉(↑)", u"一通(↓)", u"一通(↑)", u"隠", u"隠(↓)", u"隠(↑)",]
+        #vtext = [u"なし", u"壁", u"扉", u"扉(→)", u"扉(←)", u"一通(→)", u"一通(←)", u"隠", u"隠(→)", u"隠(←)",]
+        #htext = [u"なし", u"壁", u"扉", u"扉(↓)", u"扉(↑)", u"一通(↓)", u"一通(↑)", u"隠", u"隠(↓)", u"隠(↑)",]
+        vtext = [u"", u"", u"", u"", u"", u"", u"", u"", u"", u"",]
+        htext = [u"", u"", u"", u"", u"", u"", u"", u"", u"", u"",]
         self.wall_images = list()
         self.wall_icons = list()
         self.wall_texts = list()
