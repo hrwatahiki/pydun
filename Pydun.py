@@ -24,7 +24,7 @@ _undomanager = None
 
 projecturl = "http://sourceforge.jp/projects/pydun/"
 projectrssurl = "http://sourceforge.jp/projects/pydun/releases/rss"
-projectversion = "1.0.5"
+projectversion = "1.0.6"
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -33,10 +33,11 @@ class MainWindow(QtGui.QMainWindow):
         global _mapengine
         global _mapimages
         global _undomanager
+        global config
         super(MainWindow, self).__init__(parent)
 
         _undomanager = UndoManager()
-        _mapimages = MapImages()
+        _mapimages = MapImages(config.get("show_wall_menu_string", False))
         self.setmenu()
         _undomanager.changed.connect(self.updateundostate)
 
@@ -57,6 +58,7 @@ class MainWindow(QtGui.QMainWindow):
                     config["windowSize"]["height"]))
 
     def setmenu(self):
+        global config
         #File menu
         filemenu = self.menuBar().addMenu(u"ファイル(&F)")
 
@@ -102,6 +104,11 @@ class MainWindow(QtGui.QMainWindow):
         setorigineact = QtGui.QAction(u"座標設定(&O)", self)
         setorigineact.triggered.connect(self.setorigine_triggered)
         editmenu.addAction(setorigineact)
+        wallmenustringact = QtGui.QAction(u"壁メニューに文字を表示する(&W)", self)
+        wallmenustringact.setCheckable(True)
+        wallmenustringact.setChecked(config.get("show_wall_menu_string", False))
+        wallmenustringact.triggered.connect(self.togglewallmenustring_triggered)
+        editmenu.addAction(wallmenustringact)
 
         #Help menu
         helpmenu = self.menuBar().addMenu(u"ヘルプ(&H)")
@@ -128,12 +135,12 @@ class MainWindow(QtGui.QMainWindow):
             self.redoact.setDisabled(True)
 
     def setTitle(self, filename):
-        s ="Pydun - " + self.getfilename(filename)
+        s = self.getfilename(filename) + " - Pydun"
         self.setWindowTitle(s)
 
     def getfilename(self, filename):
         if filename == None:
-            s = u"新規作成"
+            s = u"無題"
         else:
             s = os.path.basename(filename)
         return s
@@ -278,6 +285,14 @@ class MainWindow(QtGui.QMainWindow):
             _mapengine.changesize(top, bottom, left, right)
             _undomanager.save(_mapengine.savestring())
             self.mainframe.mapframe.repaint()
+
+    @QtCore.Slot()
+    def togglewallmenustring_triggered(self):
+        global config
+        config["show_wall_menu_string"] = not config.get("show_wall_menu_string", False)
+        QtGui.QMessageBox.information(
+                self, u"壁メニューに文字を表示する", u"表示の切替は再起動後に有効になります。",
+                (QtGui.QMessageBox.Ok))
 
     @QtCore.Slot()
     def tutorial_triggered(self):
@@ -941,11 +956,13 @@ class SetSizeDialog(QtGui.QDialog):
 
 
 class MapImages(object):
-    def __init__(self):
-        #vtext = [u"なし", u"壁", u"扉", u"扉(→)", u"扉(←)", u"一通(→)", u"一通(←)", u"隠", u"隠(→)", u"隠(←)",]
-        #htext = [u"なし", u"壁", u"扉", u"扉(↓)", u"扉(↑)", u"一通(↓)", u"一通(↑)", u"隠", u"隠(↓)", u"隠(↑)",]
-        vtext = [u"", u"", u"", u"", u"", u"", u"", u"", u"", u"",]
-        htext = [u"", u"", u"", u"", u"", u"", u"", u"", u"", u"",]
+    def __init__(self, show_wall_menu_string):
+        if show_wall_menu_string:
+            vtext = [u"なし", u"壁", u"扉", u"扉(→)", u"扉(←)", u"一通(→)", u"一通(←)", u"隠", u"隠(→)", u"隠(←)",]
+            htext = [u"なし", u"壁", u"扉", u"扉(↓)", u"扉(↑)", u"一通(↓)", u"一通(↑)", u"隠", u"隠(↓)", u"隠(↑)",]
+        else:
+            vtext = [u"", u"", u"", u"", u"", u"", u"", u"", u"", u"",]
+            htext = [u"", u"", u"", u"", u"", u"", u"", u"", u"", u"",]
         self.wall_images = list()
         self.wall_icons = list()
         self.wall_texts = list()
