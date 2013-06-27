@@ -142,7 +142,7 @@ class MainWindow(QtGui.QMainWindow):
         if filename == None:
             s = u"無題"
         else:
-            s = os.path.basename(filename)
+            s = os.path.splitext(os.path.basename(filename))[0]
         return s
 
     @QtCore.Slot()
