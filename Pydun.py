@@ -37,7 +37,7 @@ class MainWindow(QtGui.QMainWindow):
         super(MainWindow, self).__init__(parent)
 
         _undomanager = UndoManager()
-        _mapimages = MapImages(config.get("show_wall_menu_string", False))
+        _mapimages = MapImages(config.get("showWallMenuString", False))
         self.setmenu()
         _undomanager.changed.connect(self.updateundostate)
 
@@ -106,7 +106,7 @@ class MainWindow(QtGui.QMainWindow):
         editmenu.addAction(setorigineact)
         wallmenustringact = QtGui.QAction(u"壁メニューに文字を表示する(&W)", self)
         wallmenustringact.setCheckable(True)
-        wallmenustringact.setChecked(config.get("show_wall_menu_string", False))
+        wallmenustringact.setChecked(config.get("showWallMenuString", False))
         wallmenustringact.triggered.connect(self.togglewallmenustring_triggered)
         editmenu.addAction(wallmenustringact)
 
@@ -289,7 +289,7 @@ class MainWindow(QtGui.QMainWindow):
     @QtCore.Slot()
     def togglewallmenustring_triggered(self):
         global config
-        config["show_wall_menu_string"] = not config.get("show_wall_menu_string", False)
+        config["showWallMenuString"] = not config.get("showWallMenuString", False)
         QtGui.QMessageBox.information(
                 self, u"壁メニューに文字を表示する", u"表示の切替は再起動後に有効になります。",
                 (QtGui.QMessageBox.Ok))
