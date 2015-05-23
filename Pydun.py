@@ -3,8 +3,10 @@
 
 #Pydun.py - mapping tool
 #copyright (c) 2013 WATAHIKI Hiroyuki
-#url: http://sourceforge.jp/projects/pydun/
+#url: http://osdn.jp/projects/pydun/
 #email: hrwatahiki at gmail.com
+#twitter: @hrwatahiki
+#blog: http://hrwatahiki.blogspot.jp/
 
 
 import sys
@@ -22,9 +24,9 @@ _mapengine = None
 _mapimages = None
 _undomanager = None
 
-projecturl = "http://sourceforge.jp/projects/pydun/"
-projectrssurl = "http://sourceforge.jp/projects/pydun/releases/rss"
-projectversion = "1.0.6"
+projecturl = "http://osdn.jp/projects/pydun/"
+projectrssurl = "http://osdn.jp/projects/pydun/releases/rss"
+projectversion = "1.0.6.1"
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -310,6 +312,8 @@ class MainWindow(QtGui.QMainWindow):
         u"<p>Copyright (c) 2013 WATAHIKI Hiroyuki</p>"
         u"<p>url: <a href='" + projecturl + "'>" + projecturl + "</a></p>"
         u"<p>e-mail: hrwatahiki at gmail.com</p>"
+        u"<p>twitter: <a href='https://twitter.com/hrwatahiki'>@hrwatahiki</a></p>"
+        u"<p>blog: <a href='http://hrwatahiki.blogspot.jp/'>作業記録</a></p>"
         u"<p>このソフトウェアはMITライセンスです。</p>"
         u"<p>このソフトウェアは以下のソフトウェアを使用しています。: "
         u"Python, PySide, PyYAML "
