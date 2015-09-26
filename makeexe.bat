@@ -1,3 +1,3 @@
-d:\python27\python.exe D:\Python27\Scripts\pyinstaller-2.0\pyinstaller.py --onefile --windowed .\Pydun.py
-copy .\dist\Pydun.exe .\Pydun.exe
+cd D:\users\pyinstaller-python3
+D:\Python34\python.exe pyinstaller.py --onefile --windowed D:\users\pydun\trunk\Pydun.py
 pause
