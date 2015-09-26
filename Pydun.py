@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #Pydun.py - mapping tool
@@ -11,9 +11,8 @@
 
 import sys
 import os.path
-import codecs
 import locale
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import xml.etree.ElementTree
 import webbrowser
 from PySide import QtCore, QtGui
@@ -26,7 +25,7 @@ _undomanager = None
 
 projecturl = "http://osdn.jp/projects/pydun/"
 projectrssurl = "http://osdn.jp/projects/pydun/releases/rss"
-projectversion = "1.0.6.1"
+projectversion = "1.1.0"
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -45,13 +44,13 @@ class MainWindow(QtGui.QMainWindow):
 
         self.new()
         if len(sys.argv) >= 2:
-            self.open(unicode(sys.argv[1], locale.getpreferredencoding()))
+            self.open(sys.argv[1])
 
         self.mainframe = MainFrame(self)
         self.setCentralWidget(self.mainframe)
 
         self.statusbar = QtGui.QStatusBar(self)
-        self.statusbar.showMessage(u"")
+        self.statusbar.showMessage("")
         self.setStatusBar(self.statusbar)
         if "windowSize" in config:
             self.resize(
@@ -62,66 +61,66 @@ class MainWindow(QtGui.QMainWindow):
     def setmenu(self):
         global config
         #File menu
-        filemenu = self.menuBar().addMenu(u"ファイル(&F)")
+        filemenu = self.menuBar().addMenu("ファイル(&F)")
 
-        newact = QtGui.QAction(u"新規(&N)", self)
+        newact = QtGui.QAction("新規(&N)", self)
         newact.triggered.connect(self.new_triggered)
         newact.setShortcut(QtGui.QKeySequence.New)
         filemenu.addAction(newact)
 
-        openact = QtGui.QAction(u"開く(&O)...", self)
+        openact = QtGui.QAction("開く(&O)...", self)
         openact.triggered.connect(self.open_triggered)
         openact.setShortcut(QtGui.QKeySequence.Open)
         filemenu.addAction(openact)
 
-        saveact = QtGui.QAction(u"上書き保存(&S)", self)
+        saveact = QtGui.QAction("上書き保存(&S)", self)
         saveact.triggered.connect(self.save_triggered)
         saveact.setShortcut(QtGui.QKeySequence.Save)
         filemenu.addAction(saveact)
 
-        saveasact = QtGui.QAction(u"名前をつけて保存(&A)...", self)
+        saveasact = QtGui.QAction("名前をつけて保存(&A)...", self)
         saveasact.triggered.connect(self.saveas_triggered)
         saveasact.setShortcut(QtGui.QKeySequence.SaveAs)
         filemenu.addAction(saveasact)
 
-        exitact = QtGui.QAction(u"終了(&E)", self)
+        exitact = QtGui.QAction("終了(&E)", self)
         exitact.triggered.connect(self.exit_triggered)
         exitact.setShortcut(QtGui.QKeySequence.Quit)
         filemenu.addAction(exitact)
 
         #Edit menu
-        editmenu = self.menuBar().addMenu(u"編集(&E)")
-        self.undoact = QtGui.QAction(u"元に戻す(&U)", self)
+        editmenu = self.menuBar().addMenu("編集(&E)")
+        self.undoact = QtGui.QAction("元に戻す(&U)", self)
         self.undoact.triggered.connect(self.undo_triggered)
         self.undoact.setShortcut(QtGui.QKeySequence.Undo)
         editmenu.addAction(self.undoact)
-        self.redoact = QtGui.QAction(u"やり直し(&R)", self)
+        self.redoact = QtGui.QAction("やり直し(&R)", self)
         self.redoact.triggered.connect(self.redo_triggered)
         self.redoact.setShortcut(QtGui.QKeySequence.Redo)
         editmenu.addAction(self.redoact)
         editmenu.addSeparator()
-        setmapsizeact = QtGui.QAction(u"マップのサイズ(&S)", self)
+        setmapsizeact = QtGui.QAction("マップのサイズ(&S)", self)
         setmapsizeact.triggered.connect(self.setmapsize_triggered)
         editmenu.addAction(setmapsizeact)
-        setorigineact = QtGui.QAction(u"座標設定(&O)", self)
+        setorigineact = QtGui.QAction("座標設定(&O)", self)
         setorigineact.triggered.connect(self.setorigine_triggered)
         editmenu.addAction(setorigineact)
-        wallmenustringact = QtGui.QAction(u"壁メニューに文字を表示する(&W)", self)
+        wallmenustringact = QtGui.QAction("壁メニューに文字を表示する(&W)", self)
         wallmenustringact.setCheckable(True)
         wallmenustringact.setChecked(config.get("showWallMenuString", False))
         wallmenustringact.triggered.connect(self.togglewallmenustring_triggered)
         editmenu.addAction(wallmenustringact)
 
         #Help menu
-        helpmenu = self.menuBar().addMenu(u"ヘルプ(&H)")
-        tutorialact = QtGui.QAction(u"ヘルプの表示(&H)", self)
+        helpmenu = self.menuBar().addMenu("ヘルプ(&H)")
+        tutorialact = QtGui.QAction("ヘルプの表示(&H)", self)
         tutorialact.triggered.connect(self.tutorial_triggered)
         tutorialact.setShortcut(QtGui.QKeySequence.HelpContents)
         helpmenu.addAction(tutorialact)
-        projectact = QtGui.QAction(u"プロジェクトのWebサイト(&W)", self)
+        projectact = QtGui.QAction("プロジェクトのWebサイト(&W)", self)
         projectact.triggered.connect(self.project_triggered)
         helpmenu.addAction(projectact)
-        aboutact = QtGui.QAction(u"Pydunについて(&A)...", self)
+        aboutact = QtGui.QAction("Pydunについて(&A)...", self)
         aboutact.triggered.connect(self.about_triggered)
         helpmenu.addAction(aboutact)
 
@@ -142,7 +141,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def getfilename(self, filename):
         if filename == None:
-            s = u"無題"
+            s = "無題"
         else:
             s = os.path.splitext(os.path.basename(filename))[0]
         return s
@@ -186,8 +185,8 @@ class MainWindow(QtGui.QMainWindow):
                 pass
             filename = QtGui.QFileDialog.getOpenFileName(
                 dir=d,
-                filter=u"*.pydun;;*.*", selectedFilter=u"*.pydun")
-            if filename[0] != u"":
+                filter="*.pydun;;*.*", selectedFilter="*.pydun")
+            if filename[0] != "":
                 self.open(filename[0])
 
     def open(self, filename):
@@ -217,8 +216,8 @@ class MainWindow(QtGui.QMainWindow):
             pass
         filename = QtGui.QFileDialog.getSaveFileName(
             dir=d,
-            filter=u"*.pydun;;*.*", selectedFilter=u"*.pydun")
-        if filename[0] != u"":
+            filter="*.pydun;;*.*", selectedFilter="*.pydun")
+        if filename[0] != "":
             self.save(filename[0])
             return True
         else:
@@ -266,14 +265,14 @@ class MainWindow(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def setorigine_triggered(self):
-        title = u"座標設定"
+        title = "座標設定"
         if self.mainframe.mapframe.setoriginemode:
             QtGui.QMessageBox.information(
-                self, title, u"座標設定を中止します。", QtGui.QMessageBox.Ok)
+                self, title, "座標設定を中止します。", QtGui.QMessageBox.Ok)
             self.mainframe.mapframe.setoriginemode = False
         else:
             if QtGui.QMessageBox.Ok == QtGui.QMessageBox.information(
-                self, title, u"基準にする地点をクリックしてください。",
+                self, title, "基準にする地点をクリックしてください。",
                 (QtGui.QMessageBox.Ok| QtGui.QMessageBox.Cancel)):
                 self.mainframe.mapframe.setoriginemode = True
 
@@ -293,7 +292,7 @@ class MainWindow(QtGui.QMainWindow):
         global config
         config["showWallMenuString"] = not config.get("showWallMenuString", False)
         QtGui.QMessageBox.information(
-                self, u"壁メニューに文字を表示する", u"表示の切替は再起動後に有効になります。",
+                self, "壁メニューに文字を表示する", "表示の切替は再起動後に有効になります。",
                 (QtGui.QMessageBox.Ok))
 
     @QtCore.Slot()
@@ -308,17 +307,17 @@ class MainWindow(QtGui.QMainWindow):
     @QtCore.Slot()
     def about_triggered(self):
         QtGui.QMessageBox.about(self, "Pydun",
-        u"<h1>Pydun.py "+ projectversion + "</h1>"
-        u"<p>Copyright (c) 2013 WATAHIKI Hiroyuki</p>"
-        u"<p>url: <a href='" + projecturl + "'>" + projecturl + "</a></p>"
-        u"<p>e-mail: hrwatahiki at gmail.com</p>"
-        u"<p>twitter: <a href='https://twitter.com/hrwatahiki'>@hrwatahiki</a></p>"
-        u"<p>blog: <a href='http://hrwatahiki.blogspot.jp/'>作業記録</a></p>"
-        u"<p>このソフトウェアはMITライセンスです。</p>"
-        u"<p>このソフトウェアは以下のソフトウェアを使用しています。: "
-        u"Python, PySide, PyYAML "
-        u"これらの作成者に深く感謝いたします。</p>"
-        u"<p>詳細はLICENCE.txtを参照してください。</p>")
+        "<h1>Pydun.py "+ projectversion + "</h1>"
+        "<p>Copyright (c) 2013 WATAHIKI Hiroyuki</p>"
+        "<p>url: <a href='" + projecturl + "'>" + projecturl + "</a></p>"
+        "<p>e-mail: hrwatahiki at gmail.com</p>"
+        "<p>twitter: <a href='https://twitter.com/hrwatahiki'>@hrwatahiki</a></p>"
+        "<p>blog: <a href='http://hrwatahiki.blogspot.jp/'>作業記録</a></p>"
+        "<p>このソフトウェアはMITライセンスです。</p>"
+        "<p>このソフトウェアは以下のソフトウェアを使用しています。: "
+        "Python, PySide, PyYAML "
+        "これらの作成者に深く感謝いたします。</p>"
+        "<p>詳細はLICENCE.txtを参照してください。</p>")
 
 
 class MainFrame(QtGui.QFrame):
@@ -333,30 +332,30 @@ class MainFrame(QtGui.QFrame):
 
         self.detail = QtGui.QLabel(self)
         self.detail.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
-        self.detail.setText(u"")
+        self.detail.setText("")
         self.detail.setMaximumHeight(100)
         self.detail.setMinimumHeight(100)
 
         self.boxdrawbutton = QtGui.QRadioButton(self)
-        self.boxdrawbutton.setText(u"ボックス形式で壁を描画(&B)")
+        self.boxdrawbutton.setText("ボックス形式で壁を描画(&B)")
         self.boxdrawbutton.setChecked(True)
         self.boxdrawbutton.setSizePolicy(
             QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
 
         self.growdrawbutton = QtGui.QRadioButton(self)
-        self.growdrawbutton.setText(u"足跡形式で壁を描画(&G)")
+        self.growdrawbutton.setText("足跡形式で壁を描画(&G)")
         self.growdrawbutton.setChecked(False)
         self.growdrawbutton.setSizePolicy(
             QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
 
         self.backcolorbutton = QtGui.QRadioButton(self)
-        self.backcolorbutton.setText(u"背景色(&C)")
+        self.backcolorbutton.setText("背景色(&C)")
         self.backcolorbutton.setChecked(False)
         self.backcolorbutton.setSizePolicy(
             QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
 
         self.setbackcolorbutton = QtGui.QPushButton(self)
-        self.setbackcolorbutton.setText(u"背景色を設定(&S)...")
+        self.setbackcolorbutton.setText("背景色を設定(&S)...")
         self.setbackcolorbutton.setSizePolicy(
             QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
 
@@ -369,7 +368,7 @@ class MainFrame(QtGui.QFrame):
         if latestversion != projectversion:
             self.update = QtGui.QLabel(self)
             self.update.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
-            self.update.setText(u"<a href='{url}'>最新のPydun({ver})がダウンロードできます。</a>".format(url=projecturl, ver=latestversion))
+            self.update.setText("<a href='{url}'>最新のPydun({ver})がダウンロードできます。</a>".format(url=projecturl, ver=latestversion))
             self.update.setOpenExternalLinks(True)
 
         layout = QtGui.QGridLayout(self)
@@ -413,7 +412,7 @@ class MainFrame(QtGui.QFrame):
 
     @QtCore.Slot(int, int, int)
     def mouse_moved(self, x=0, y=0, b=QtCore.Qt.MouseButton.NoButton):
-        cood = u"({x}, {y})\n".format(x=_mapengine.viewx(x), y=_mapengine.viewy(y))
+        cood = "({x}, {y})\n".format(x=_mapengine.viewx(x), y=_mapengine.viewy(y))
         self.detail.setText(cood + _mapengine.getdetail(x, y))
         self.mapframe.repaint()
 
@@ -697,20 +696,20 @@ class DetailDialog(QtGui.QDialog):
 
         marklabel = QtGui.QLabel(self)
         marklabel.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-        marklabel.setText(u"マーク(&M)")
+        marklabel.setText("マーク(&M)")
         marklabel.setSizePolicy(
             QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
 
         self.marktext = QtGui.QLineEdit(self)
         self.marktext.setMaxLength(1)
-        self.marktext.setText(u"")
+        self.marktext.setText("")
         self.marktext.setMinimumWidth(20)
         self.marktext.setSizePolicy(
             QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         marklabel.setBuddy(self.marktext)
 
         self.forecolorbutton = QtGui.QPushButton(self)
-        self.forecolorbutton.setText(u"文字色(&C)...")
+        self.forecolorbutton.setText("文字色(&C)...")
         self.forecolorbutton.clicked.connect(self.forecolorbutton_clicked)
 
         self.forecolorbox = ColorBox(self)
@@ -720,18 +719,18 @@ class DetailDialog(QtGui.QDialog):
 
         detaillabel = QtGui.QLabel(self)
         detaillabel.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignRight)
-        detaillabel.setText(u"詳細(&D)")
+        detaillabel.setText("詳細(&D)")
 
         self.detailtext = QtGui.QTextEdit(self)
-        self.detailtext.setText(u"")
+        self.detailtext.setText("")
         detaillabel.setBuddy(self.detailtext)
 
         self.buttonbox = QtGui.QDialogButtonBox(
             QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
         self.buttonbox.accepted.connect(self.accept)
         self.buttonbox.rejected.connect(self.reject)
-        self.buttonbox.button(QtGui.QDialogButtonBox.Ok).setText(u"OK")
-        self.buttonbox.button(QtGui.QDialogButtonBox.Cancel).setText(u"キャンセル")
+        self.buttonbox.button(QtGui.QDialogButtonBox.Ok).setText("OK")
+        self.buttonbox.button(QtGui.QDialogButtonBox.Cancel).setText("キャンセル")
 
         layout = QtGui.QGridLayout()
         layout.addWidget(marklabel, 0, 0, 1, 1)
@@ -763,22 +762,22 @@ class DetailDialog(QtGui.QDialog):
 class SetOrigineDialog(QtGui.QDialog):
     def __init__(self, parent=None):
         super(SetOrigineDialog, self).__init__(parent)
-        self.setWindowTitle(u"座標設定")
+        self.setWindowTitle("座標設定")
 
         promptlabel = QtGui.QLabel(self)
         promptlabel.setAlignment(
             QtCore.Qt.AlignVCenter | QtCore.Qt.AlignLeft)
-        promptlabel.setText(u"この地点の座標を入力してください。")
+        promptlabel.setText("この地点の座標を入力してください。")
 
         self.currentlabel = QtGui.QLabel(self)
         self.currentlabel.setAlignment(
             QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
-        self.currentlabel.setText(u"")
+        self.currentlabel.setText("")
 
         xlabel = QtGui.QLabel(self)
         xlabel.setAlignment(
             QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-        xlabel.setText(u"&X")
+        xlabel.setText("&X")
 
         self.xbox = QtGui.QSpinBox(self)
         self.xbox.setRange(-999, +999)
@@ -788,7 +787,7 @@ class SetOrigineDialog(QtGui.QDialog):
 
         ylabel = QtGui.QLabel(self)
         ylabel.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-        ylabel.setText(u"&Y")
+        ylabel.setText("&Y")
 
         self.ybox = QtGui.QSpinBox(self)
         self.ybox.setRange(-999, +999)
@@ -800,8 +799,8 @@ class SetOrigineDialog(QtGui.QDialog):
             QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
         self.buttonbox.accepted.connect(self.accept)
         self.buttonbox.rejected.connect(self.reject)
-        self.buttonbox.button(QtGui.QDialogButtonBox.Ok).setText(u"OK")
-        self.buttonbox.button(QtGui.QDialogButtonBox.Cancel).setText(u"キャンセル")
+        self.buttonbox.button(QtGui.QDialogButtonBox.Ok).setText("OK")
+        self.buttonbox.button(QtGui.QDialogButtonBox.Cancel).setText("キャンセル")
 
         layout = QtGui.QGridLayout()
         layout.addWidget(promptlabel, 0, 0, 1, 4)
@@ -817,7 +816,7 @@ class SetOrigineDialog(QtGui.QDialog):
     def setcurrent(self, x, y):
         self.xbox.setValue(x)
         self.ybox.setValue(y)
-        self.currentlabel.setText(u"現在の座標 ({x}, {y})".format(x=x, y=y))
+        self.currentlabel.setText("現在の座標 ({x}, {y})".format(x=x, y=y))
 
     @property
     def originex(self):
@@ -831,10 +830,10 @@ class SetOrigineDialog(QtGui.QDialog):
 class SetSizeDialog(QtGui.QDialog):
     def __init__(self, parent=None):
         super(SetSizeDialog, self).__init__(parent)
-        self.setWindowTitle(u"マップのサイズ")
+        self.setWindowTitle("マップのサイズ")
 
         self.topbutton = QtGui.QRadioButton(self)
-        self.topbutton.setText(u"上(&T)")
+        self.topbutton.setText("上(&T)")
         self.topbutton.clicked.connect(self.updatewidgets)
 
         self.topsize = QtGui.QSpinBox(self)
@@ -843,7 +842,7 @@ class SetSizeDialog(QtGui.QDialog):
         self.topsize.valueChanged.connect(self.updatewidgets)
 
         self.bottombutton = QtGui.QRadioButton(self)
-        self.bottombutton.setText(u"下(&B)")
+        self.bottombutton.setText("下(&B)")
         self.bottombutton.clicked.connect(self.updatewidgets)
 
         self.bottomsize = QtGui.QSpinBox(self)
@@ -852,7 +851,7 @@ class SetSizeDialog(QtGui.QDialog):
         self.bottomsize.valueChanged.connect(self.updatewidgets)
 
         self.leftbutton = QtGui.QRadioButton(self)
-        self.leftbutton.setText(u"左(&L)")
+        self.leftbutton.setText("左(&L)")
         self.leftbutton.clicked.connect(self.updatewidgets)
 
         self.leftsize = QtGui.QSpinBox(self)
@@ -861,7 +860,7 @@ class SetSizeDialog(QtGui.QDialog):
         self.leftsize.valueChanged.connect(self.updatewidgets)
 
         self.rightbutton = QtGui.QRadioButton(self)
-        self.rightbutton.setText(u"右(&R)")
+        self.rightbutton.setText("右(&R)")
         self.rightbutton.clicked.connect(self.updatewidgets)
 
         self.rightsize = QtGui.QSpinBox(self)
@@ -872,14 +871,14 @@ class SetSizeDialog(QtGui.QDialog):
         self.sizelabel = QtGui.QLabel(self)
         self.sizelabel .setAlignment(
             QtCore.Qt.AlignVCenter | QtCore.Qt.AlignLeft)
-        self.sizelabel.setText(u"この地点の座標を入力してください。")
+        self.sizelabel.setText("この地点の座標を入力してください。")
 
         self.buttonbox = QtGui.QDialogButtonBox(
         QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
         self.buttonbox.accepted.connect(self.accept)
         self.buttonbox.rejected.connect(self.reject)
-        self.buttonbox.button(QtGui.QDialogButtonBox.Ok).setText(u"OK")
-        self.buttonbox.button(QtGui.QDialogButtonBox.Cancel).setText(u"キャンセル")
+        self.buttonbox.button(QtGui.QDialogButtonBox.Ok).setText("OK")
+        self.buttonbox.button(QtGui.QDialogButtonBox.Cancel).setText("キャンセル")
 
         verticalgroup = QtGui.QButtonGroup(self)
         verticalgroup.addButton(self.topbutton)
@@ -939,7 +938,7 @@ class SetSizeDialog(QtGui.QDialog):
             self.rightsize.setEnabled(True)
 
         self.sizelabel.setText(
-            u"変更前のサイズ: {w1} x {h1}\n変更後のサイズ: {w2} x {h2}".format(
+            "変更前のサイズ: {w1} x {h1}\n変更後のサイズ: {w2} x {h2}".format(
                 w1=self._width, h1=self._height,
                 w2=self._width+dw, h2=self._height+dh))
 
@@ -962,11 +961,11 @@ class SetSizeDialog(QtGui.QDialog):
 class MapImages(object):
     def __init__(self, show_wall_menu_string):
         if show_wall_menu_string:
-            vtext = [u"なし", u"壁", u"扉", u"扉(→)", u"扉(←)", u"一通(→)", u"一通(←)", u"隠", u"隠(→)", u"隠(←)",]
-            htext = [u"なし", u"壁", u"扉", u"扉(↓)", u"扉(↑)", u"一通(↓)", u"一通(↑)", u"隠", u"隠(↓)", u"隠(↑)",]
+            vtext = ["なし", "壁", "扉", "扉(→)", "扉(←)", "一通(→)", "一通(←)", "隠", "隠(→)", "隠(←)",]
+            htext = ["なし", "壁", "扉", "扉(↓)", "扉(↑)", "一通(↓)", "一通(↑)", "隠", "隠(↓)", "隠(↑)",]
         else:
-            vtext = [u"", u"", u"", u"", u"", u"", u"", u"", u"", u"",]
-            htext = [u"", u"", u"", u"", u"", u"", u"", u"", u"", u"",]
+            vtext = ["", "", "", "", "", "", "", "", "", "",]
+            htext = ["", "", "", "", "", "", "", "", "", "",]
         self.wall_images = list()
         self.wall_icons = list()
         self.wall_texts = list()
@@ -977,8 +976,8 @@ class MapImages(object):
             for direction in ["v", "h"]:
                 filename = os.path.join(
                     basedir(),
-                    u"images",
-                    u"wall_{direction}_{index:02}.png".format(
+                    "images",
+                    "wall_{direction}_{index:02}.png".format(
                         direction=direction, index=index))
                 self.wall_images[index][direction] = QtGui.QImage()
                 self.wall_images[index][direction].load(filename)
@@ -1043,8 +1042,8 @@ class MapEngine(object):
         def represent_unicode(dumper, data):
             return dumper.represent_scalar("tag:yaml.org,2002:str", data)
         def construct_unicode(loader, node):
-            return unicode(loader.construct_scalar(node))
-        yaml.add_representer(unicode, represent_unicode)
+            return str(loader.construct_scalar(node))
+        yaml.add_representer(str, represent_unicode)
         yaml.add_constructor("tag:yaml.org,2002:str", construct_unicode)
 
     def getdata(self, x, y, direction):
@@ -1095,13 +1094,13 @@ class MapEngine(object):
 
     def getnote(self, x, y):
         return self._note.get(
-            self.coodtokey(x, y), {"mark":u"", "detail":u"", "forecolor":u"#000000", "backcolor":u""})
+            self.coodtokey(x, y), {"mark":"", "detail":"", "forecolor":"#000000", "backcolor":""})
 
     def coodtokey(self, x, y):
-        return u"{x:+05d}_{y:+05d}".format(x=x, y=y)
+        return "{x:+05d}_{y:+05d}".format(x=int(x), y=int(y))
 
     def keytocood(self, key):
-        return map(int, key.split("_"))
+        return list(map(int, key.split("_")))
 
     def setmark(self, x, y, mark):
         note = self.getnote(x, y)
@@ -1237,7 +1236,7 @@ class MapEngine(object):
 
     def save(self, filename):
         dt = self.savestring()
-        with codecs.open(filename, "w") as f:
+        with open(filename, "w", encoding='utf-8') as f:
             f.write(dt)
             self.filename = filename
 
@@ -1250,13 +1249,13 @@ class MapEngine(object):
 
         #noteは表示用に座標変換する。
         n = dict()
-        for nk, ni in self._note.items():
+        for nk, ni in list(self._note.items()):
             if ni["mark"] != "" or ni["detail"] != "" or ni["backcolor"]:
                 x, y = self.keytocood(nk)
                 n[self.coodtokey(self.viewx(x), self.viewy(y))] = ni
         data["note"] = n
         return yaml.safe_dump(data, allow_unicode=True,
-                default_flow_style=False, encoding='utf-8')
+                default_flow_style=False, encoding='utf-8').decode('utf-8')
 
     def getmapstring(self):
         #出力用マップ作成
@@ -1287,7 +1286,7 @@ class MapEngine(object):
         return m
 
     def load(self, filename):
-        with codecs.open(filename, "r", encoding="utf-8") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             st = f.read()
         self.loadfromstring(st)
         self.filename = filename
@@ -1318,7 +1317,7 @@ class MapEngine(object):
 
         #noteは内部用に座標変換する。
         n = dict()
-        for nk, ni in data["note"].items():
+        for nk, ni in list(data["note"].items()):
             if ni["mark"] != "" or ni["detail"] != "" or ni["backcolor"] != "":
                 x, y = self.keytocood(nk)
                 n[self.coodtokey(self.worldx(x), self.worldy(y))] = ni
@@ -1414,12 +1413,12 @@ class PydunColorDialog(QtGui.QColorDialog):
 class PydunAskSaveDialog(QtGui.QMessageBox):
     def __init__(self, parent, filename):
         super(PydunAskSaveDialog, self).__init__(parent)
-        self.setText(u"{filename} への変更を保存しますか?".format(filename=filename))
+        self.setText("{filename} への変更を保存しますか?".format(filename=filename))
         self.setStandardButtons(QtGui.QMessageBox.Save | QtGui.QMessageBox.Discard | QtGui.QMessageBox.Cancel)
         self.setDefaultButton(QtGui.QMessageBox.Save)
-        self.button(QtGui.QMessageBox.Save).setText(u"保存する(&S)")
-        self.button(QtGui.QMessageBox.Discard).setText(u"保存しない(&N)")
-        self.button(QtGui.QMessageBox.Cancel).setText(u"キャンセル")
+        self.button(QtGui.QMessageBox.Save).setText("保存する(&S)")
+        self.button(QtGui.QMessageBox.Discard).setText("保存しない(&N)")
+        self.button(QtGui.QMessageBox.Cancel).setText("キャンセル")
 
 
 def getcolorstring(color):
@@ -1432,11 +1431,11 @@ def getcolorfromstring(colorstring):
         int(colorstring[5:7], 16))
 
 def basedir():
-    return os.path.dirname(os.path.abspath(unicode(sys.argv[0], locale.getpreferredencoding())))
+    return os.path.dirname(os.path.abspath(sys.argv[0]))
 
 def getlatestversion():
     try:
-        rss = urllib.urlopen(projectrssurl)
+        rss = urllib.request.urlopen(projectrssurl)
         rssstring = rss.read()
         rsstree = xml.etree.ElementTree.fromstring(rssstring)
         item = rsstree.find("channel/item/title")
@@ -1460,7 +1459,7 @@ def loadconfig():
     global configfilename
     configfilename = os.path.join(
         basedir(),
-        u"Pydun.config")
+        "Pydun.config")
     try:
         with open(configfilename, "r") as f:
             config = yaml.safe_load(f)
