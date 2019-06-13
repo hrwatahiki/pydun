@@ -15,7 +15,7 @@ import locale
 import urllib.request, urllib.parse, urllib.error
 import xml.etree.ElementTree
 import webbrowser
-from PySide import QtCore, QtGui
+from PySide2 import QtCore, QtGui, QtWidgets
 import yaml
 
 
@@ -23,12 +23,12 @@ _mapengine = None
 _mapimages = None
 _undomanager = None
 
-projecturl = "http://osdn.jp/projects/pydun/"
-projectrssurl = "http://osdn.jp/projects/pydun/releases/rss"
-projectversion = "1.1.0"
+projecturl = "http://ja.osdn.net/projects/pydun/"
+projectrssurl = "http://ja.osdn.net/projects/pydun/releases/rss"
+projectversion = "1.2.0"
+defaultfontname = "Yu Gothic UI"
 
-
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
         global _mapengine
@@ -49,7 +49,7 @@ class MainWindow(QtGui.QMainWindow):
         self.mainframe = MainFrame(self)
         self.setCentralWidget(self.mainframe)
 
-        self.statusbar = QtGui.QStatusBar(self)
+        self.statusbar = QtWidgets.QStatusBar(self)
         self.statusbar.showMessage("")
         self.setStatusBar(self.statusbar)
         if "windowSize" in config:
@@ -63,49 +63,49 @@ class MainWindow(QtGui.QMainWindow):
         #File menu
         filemenu = self.menuBar().addMenu("ファイル(&F)")
 
-        newact = QtGui.QAction("新規(&N)", self)
+        newact = QtWidgets.QAction("新規(&N)", self)
         newact.triggered.connect(self.new_triggered)
         newact.setShortcut(QtGui.QKeySequence.New)
         filemenu.addAction(newact)
 
-        openact = QtGui.QAction("開く(&O)...", self)
+        openact = QtWidgets.QAction("開く(&O)...", self)
         openact.triggered.connect(self.open_triggered)
         openact.setShortcut(QtGui.QKeySequence.Open)
         filemenu.addAction(openact)
 
-        saveact = QtGui.QAction("上書き保存(&S)", self)
+        saveact = QtWidgets.QAction("上書き保存(&S)", self)
         saveact.triggered.connect(self.save_triggered)
         saveact.setShortcut(QtGui.QKeySequence.Save)
         filemenu.addAction(saveact)
 
-        saveasact = QtGui.QAction("名前をつけて保存(&A)...", self)
+        saveasact = QtWidgets.QAction("名前をつけて保存(&A)...", self)
         saveasact.triggered.connect(self.saveas_triggered)
         saveasact.setShortcut(QtGui.QKeySequence.SaveAs)
         filemenu.addAction(saveasact)
 
-        exitact = QtGui.QAction("終了(&E)", self)
+        exitact = QtWidgets.QAction("終了(&E)", self)
         exitact.triggered.connect(self.exit_triggered)
         exitact.setShortcut(QtGui.QKeySequence.Quit)
         filemenu.addAction(exitact)
 
         #Edit menu
         editmenu = self.menuBar().addMenu("編集(&E)")
-        self.undoact = QtGui.QAction("元に戻す(&U)", self)
+        self.undoact = QtWidgets.QAction("元に戻す(&U)", self)
         self.undoact.triggered.connect(self.undo_triggered)
         self.undoact.setShortcut(QtGui.QKeySequence.Undo)
         editmenu.addAction(self.undoact)
-        self.redoact = QtGui.QAction("やり直し(&R)", self)
+        self.redoact = QtWidgets.QAction("やり直し(&R)", self)
         self.redoact.triggered.connect(self.redo_triggered)
         self.redoact.setShortcut(QtGui.QKeySequence.Redo)
         editmenu.addAction(self.redoact)
         editmenu.addSeparator()
-        setmapsizeact = QtGui.QAction("マップのサイズ(&S)", self)
+        setmapsizeact = QtWidgets.QAction("マップのサイズ(&S)", self)
         setmapsizeact.triggered.connect(self.setmapsize_triggered)
         editmenu.addAction(setmapsizeact)
-        setorigineact = QtGui.QAction("座標設定(&O)", self)
+        setorigineact = QtWidgets.QAction("座標設定(&O)", self)
         setorigineact.triggered.connect(self.setorigine_triggered)
         editmenu.addAction(setorigineact)
-        wallmenustringact = QtGui.QAction("壁メニューに文字を表示する(&W)", self)
+        wallmenustringact = QtWidgets.QAction("壁メニューに文字を表示する(&W)", self)
         wallmenustringact.setCheckable(True)
         wallmenustringact.setChecked(config.get("showWallMenuString", False))
         wallmenustringact.triggered.connect(self.togglewallmenustring_triggered)
@@ -113,14 +113,14 @@ class MainWindow(QtGui.QMainWindow):
 
         #Help menu
         helpmenu = self.menuBar().addMenu("ヘルプ(&H)")
-        tutorialact = QtGui.QAction("ヘルプの表示(&H)", self)
+        tutorialact = QtWidgets.QAction("ヘルプの表示(&H)", self)
         tutorialact.triggered.connect(self.tutorial_triggered)
         tutorialact.setShortcut(QtGui.QKeySequence.HelpContents)
         helpmenu.addAction(tutorialact)
-        projectact = QtGui.QAction("プロジェクトのWebサイト(&W)", self)
+        projectact = QtWidgets.QAction("プロジェクトのWebサイト(&W)", self)
         projectact.triggered.connect(self.project_triggered)
         helpmenu.addAction(projectact)
-        aboutact = QtGui.QAction("Pydunについて(&A)...", self)
+        aboutact = QtWidgets.QAction("Pydunについて(&A)...", self)
         aboutact.triggered.connect(self.about_triggered)
         helpmenu.addAction(aboutact)
 
@@ -167,9 +167,9 @@ class MainWindow(QtGui.QMainWindow):
         if not _undomanager.commited:
             dlg = PydunAskSaveDialog(self, self.getfilename(_mapengine.filename))
             ret = dlg.exec_()
-            if ret == QtGui.QMessageBox.Cancel:
+            if ret == QtWidgets.QMessageBox.Cancel:
                 return False
-            elif ret == QtGui.QMessageBox.Save:
+            elif ret == QtWidgets.QMessageBox.Save:
                 saved = self.save_triggered()
                 if not saved:
                     return False
@@ -183,7 +183,7 @@ class MainWindow(QtGui.QMainWindow):
                 d = os.path.dirname(_mapengine.filename)
             except:
                 pass
-            filename = QtGui.QFileDialog.getOpenFileName(
+            filename = QtWidgets.QFileDialog.getOpenFileName(
                 dir=d,
                 filter="*.pydun;;*.*", selectedFilter="*.pydun")
             if filename[0] != "":
@@ -214,7 +214,7 @@ class MainWindow(QtGui.QMainWindow):
             d = os.path.dirname(_mapengine.filename)
         except:
             pass
-        filename = QtGui.QFileDialog.getSaveFileName(
+        filename = QtWidgets.QFileDialog.getSaveFileName(
             dir=d,
             filter="*.pydun;;*.*", selectedFilter="*.pydun")
         if filename[0] != "":
@@ -267,13 +267,13 @@ class MainWindow(QtGui.QMainWindow):
     def setorigine_triggered(self):
         title = "座標設定"
         if self.mainframe.mapframe.setoriginemode:
-            QtGui.QMessageBox.information(
-                self, title, "座標設定を中止します。", QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.information(
+                self, title, "座標設定を中止します。", QtWidgets.QMessageBox.Ok)
             self.mainframe.mapframe.setoriginemode = False
         else:
-            if QtGui.QMessageBox.Ok == QtGui.QMessageBox.information(
+            if QtWidgets.QMessageBox.Ok == QtWidgets.QMessageBox.information(
                 self, title, "基準にする地点をクリックしてください。",
-                (QtGui.QMessageBox.Ok| QtGui.QMessageBox.Cancel)):
+                (QtWidgets.QMessageBox.Ok| QtWidgets.QMessageBox.Cancel)):
                 self.mainframe.mapframe.setoriginemode = True
 
     @QtCore.Slot()
@@ -281,7 +281,7 @@ class MainWindow(QtGui.QMainWindow):
         dlg = SetSizeDialog(self)
         dlg.setoriginalsize(_mapengine.width, _mapengine.height)
         dlg.exec_()
-        if dlg.result() == QtGui.QDialog.Accepted:
+        if dlg.result() == QtWidgets.QDialog.Accepted:
             top, bottom, left, right = dlg.getsize()
             _mapengine.changesize(top, bottom, left, right)
             _undomanager.save(_mapengine.savestring())
@@ -291,9 +291,9 @@ class MainWindow(QtGui.QMainWindow):
     def togglewallmenustring_triggered(self):
         global config
         config["showWallMenuString"] = not config.get("showWallMenuString", False)
-        QtGui.QMessageBox.information(
+        QtWidgets.QMessageBox.information(
                 self, "壁メニューに文字を表示する", "表示の切替は再起動後に有効になります。",
-                (QtGui.QMessageBox.Ok))
+                (QtWidgets.QMessageBox.Ok))
 
     @QtCore.Slot()
     def tutorial_triggered(self):
@@ -306,7 +306,7 @@ class MainWindow(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def about_triggered(self):
-        QtGui.QMessageBox.about(self, "Pydun",
+        QtWidgets.QMessageBox.about(self, "Pydun",
         "<h1>Pydun.py "+ projectversion + "</h1>"
         "<p>Copyright (c) 2013-2015 WATAHIKI Hiroyuki</p>"
         "<p>url: <a href='" + projecturl + "'>" + projecturl + "</a></p>"
@@ -315,63 +315,66 @@ class MainWindow(QtGui.QMainWindow):
         "<p>blog: <a href='http://hrwatahiki.blogspot.jp/'>作業記録</a></p>"
         "<p>このソフトウェアはMITライセンスです。</p>"
         "<p>このソフトウェアは以下のソフトウェアを使用しています。: "
-        "Python, PySide, PyYAML "
+        "Python, PySide2, PyYAML "
         "これらの作成者に深く感謝いたします。</p>"
         "<p>詳細はLICENCE.txtを参照してください。</p>")
 
 
-class MainFrame(QtGui.QFrame):
+class MainFrame(QtWidgets.QFrame):
     create_wall_menu_triggered_signal = QtCore.Signal(int, int, str, int)
 
     def __init__(self, parent=None):
         super(MainFrame, self).__init__(parent)
 
+        f = QtGui.QFont(defaultfontname, 9)
+        self.setFont(f)
+
         self.mapframe = MapFrame(self)
-        scrollarea = QtGui.QScrollArea(self)
+        scrollarea = QtWidgets.QScrollArea(self)
         scrollarea.setWidget(self.mapframe)
 
-        self.detail = QtGui.QLabel(self)
+        self.detail = QtWidgets.QLabel(self)
         self.detail.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         self.detail.setText("")
         self.detail.setMaximumHeight(100)
         self.detail.setMinimumHeight(100)
 
-        self.boxdrawbutton = QtGui.QRadioButton(self)
+        self.boxdrawbutton = QtWidgets.QRadioButton(self)
         self.boxdrawbutton.setText("ボックス形式で壁を描画(&B)")
         self.boxdrawbutton.setChecked(True)
         self.boxdrawbutton.setSizePolicy(
-            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
-        self.growdrawbutton = QtGui.QRadioButton(self)
+        self.growdrawbutton = QtWidgets.QRadioButton(self)
         self.growdrawbutton.setText("足跡形式で壁を描画(&G)")
         self.growdrawbutton.setChecked(False)
         self.growdrawbutton.setSizePolicy(
-            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
-        self.backcolorbutton = QtGui.QRadioButton(self)
+        self.backcolorbutton = QtWidgets.QRadioButton(self)
         self.backcolorbutton.setText("背景色(&C)")
         self.backcolorbutton.setChecked(False)
         self.backcolorbutton.setSizePolicy(
-            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
-        self.setbackcolorbutton = QtGui.QPushButton(self)
+        self.setbackcolorbutton = QtWidgets.QPushButton(self)
         self.setbackcolorbutton.setText("背景色を設定(&S)...")
         self.setbackcolorbutton.setSizePolicy(
-            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
         self.backcolorbox = ColorBox(self)
         self.backcolorbox.setMinimumSize(30, 30)
         self.backcolorbox.setSizePolicy(
-            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
         latestversion = getlatestversion()
         if latestversion != projectversion:
-            self.update = QtGui.QLabel(self)
+            self.update = QtWidgets.QLabel(self)
             self.update.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
             self.update.setText("<a href='{url}'>最新のPydun({ver})がダウンロードできます。</a>".format(url=projecturl, ver=latestversion))
             self.update.setOpenExternalLinks(True)
 
-        layout = QtGui.QGridLayout(self)
+        layout = QtWidgets.QGridLayout(self)
         layout.addWidget(scrollarea, 0, 0, 1, 3)
         layout.addWidget(self.detail, 1, 0, 4, 1)
         layout.addWidget(self.boxdrawbutton, 1, 1, 1, 2)
@@ -396,9 +399,9 @@ class MainFrame(QtGui.QFrame):
             self.setbackcolorbutton_clicked)
 
     def create_wall_menu(self, direction):
-        menu = QtGui.QMenu(self)
+        menu = QtWidgets.QMenu(self)
         for idx, img in enumerate(_mapimages.wall_icons):
-            act = QtGui.QAction(_mapimages.wall_texts[idx][direction], self)
+            act = QtWidgets.QAction(_mapimages.wall_texts[idx][direction], self)
             act.setIcon(img[direction])
 
             def triggerd(idx):
@@ -438,7 +441,7 @@ class MainFrame(QtGui.QFrame):
             dlg = SetOrigineDialog(self)
             dlg.setcurrent(_mapengine.viewx(x1), _mapengine.viewy(y1))
             dlg.exec_() #showでは処理がとまらない。
-            if dlg.result() == QtGui.QDialog.Accepted:
+            if dlg.result() == QtWidgets.QDialog.Accepted:
                 _mapengine.setoffset(
                     dlg.originex - _mapengine.viewx(x1) + _mapengine.offsetx,
                     dlg.originey - _mapengine.viewy(y1) + _mapengine.offsety
@@ -453,7 +456,7 @@ class MainFrame(QtGui.QFrame):
                 _mapengine.getmark(x1, y1), _mapengine.getdetail(x1, y1),
                 getcolorfromstring(_mapengine.getforecolor(x1, y1)))
             dlg.exec_() #showでは処理がとまらない。
-            if dlg.result() == QtGui.QDialog.Accepted:
+            if dlg.result() == QtWidgets.QDialog.Accepted:
                 forecolor = getcolorstring(dlg.forecolorbox.color)
                 _mapengine.setmark(x1, y1, dlg.marktext.text())
                 _mapengine.setdetail(x1, y1, dlg.detailtext.toPlainText())
@@ -484,12 +487,12 @@ class MainFrame(QtGui.QFrame):
         dlg.setCurrentColor(self.backcolorbox.color)
         dlg.exec_()
         config["customColor"] = dlg.config
-        if dlg.result() == QtGui.QDialog.Accepted:
+        if dlg.result() == QtWidgets.QDialog.Accepted:
             self.backcolorbox.color = dlg.currentColor()
             self.backcolorbutton.setChecked(True)
 
 
-class MapFrame(QtGui.QFrame):
+class MapFrame(QtWidgets.QFrame):
     mouse_moved = QtCore.Signal(int, int, int)
     mouse_released = QtCore.Signal(int, int, str)
     mouse_drag_released = QtCore.Signal(int, int, int, int, int)
@@ -498,6 +501,7 @@ class MapFrame(QtGui.QFrame):
 
     def __init__(self, parent=None):
         super(MapFrame, self).__init__(parent)
+        self.setFont = QtGui.QFont(defaultfontname, 9)
         self._pressedbutton = QtCore.Qt.MouseButton.NoButton
         self._x1 = 0
         self._y1 = 0
@@ -509,7 +513,7 @@ class MapFrame(QtGui.QFrame):
         self._py2 = 0
         self._dragging = False
         self.setoriginemode = False
-        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.resize(
             _mapimages.width * (_mapengine.width) + _mapimages.widthoffset * 2,
             _mapimages.height * (_mapengine.height) + _mapimages.heightoffset * 2
@@ -618,7 +622,7 @@ class MapFrame(QtGui.QFrame):
                 self._py2 = event.pos().y()
                 if (self._pressedbutton != QtCore.Qt.MouseButton.NoButton and
                     (event.pos() - self._pos1).manhattanLength() >=
-                     QtGui.QApplication.startDragDistance()):
+                     QtWidgets.QApplication.startDragDistance()):
                     self._dragging = True
                 self.mouse_moved.emit(self._x2, self._y2, event.buttons())
                 return True
@@ -677,7 +681,7 @@ class MapFrame(QtGui.QFrame):
             return False
 
 
-class ColorBox(QtGui.QFrame):
+class ColorBox(QtWidgets.QFrame):
     def __init__(self, parent=None):
         super(ColorBox, self).__init__(parent)
         self.color = QtGui.QColor(255, 255, 255)
@@ -690,49 +694,53 @@ class ColorBox(QtGui.QFrame):
         painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
 
 
-class DetailDialog(QtGui.QDialog):
+class DetailDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(DetailDialog, self).__init__(parent)
 
-        marklabel = QtGui.QLabel(self)
+        f = QtGui.QFont(defaultfontname, 9)
+        self.setFont(f)
+
+        marklabel = QtWidgets.QLabel(self)
         marklabel.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
         marklabel.setText("マーク(&M)")
         marklabel.setSizePolicy(
-            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
-        self.marktext = QtGui.QLineEdit(self)
-        self.marktext.setMaxLength(1)
+        self.marktext = QtWidgets.QLineEdit(self)
+        self.marktext.setFont(f)
+        self.marktext.setMaxLength(2)
         self.marktext.setText("")
         self.marktext.setMinimumWidth(20)
         self.marktext.setSizePolicy(
-            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         marklabel.setBuddy(self.marktext)
 
-        self.forecolorbutton = QtGui.QPushButton(self)
+        self.forecolorbutton = QtWidgets.QPushButton(self)
         self.forecolorbutton.setText("文字色(&C)...")
         self.forecolorbutton.clicked.connect(self.forecolorbutton_clicked)
 
         self.forecolorbox = ColorBox(self)
         self.forecolorbox.setMinimumSize(30, 30)
         self.forecolorbox.setSizePolicy(
-            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
-        detaillabel = QtGui.QLabel(self)
+        detaillabel = QtWidgets.QLabel(self)
         detaillabel.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignRight)
         detaillabel.setText("詳細(&D)")
 
-        self.detailtext = QtGui.QTextEdit(self)
+        self.detailtext = QtWidgets.QTextEdit(self)
         self.detailtext.setText("")
         detaillabel.setBuddy(self.detailtext)
 
-        self.buttonbox = QtGui.QDialogButtonBox(
-            QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        self.buttonbox = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self.buttonbox.accepted.connect(self.accept)
         self.buttonbox.rejected.connect(self.reject)
-        self.buttonbox.button(QtGui.QDialogButtonBox.Ok).setText("OK")
-        self.buttonbox.button(QtGui.QDialogButtonBox.Cancel).setText("キャンセル")
+        self.buttonbox.button(QtWidgets.QDialogButtonBox.Ok).setText("OK")
+        self.buttonbox.button(QtWidgets.QDialogButtonBox.Cancel).setText("キャンセル")
 
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         layout.addWidget(marklabel, 0, 0, 1, 1)
         layout.addWidget(self.marktext, 0, 1, 1, 1)
         layout.addWidget(self.forecolorbutton, 0, 2, 1, 1)
@@ -755,54 +763,58 @@ class DetailDialog(QtGui.QDialog):
         dlg.setCurrentColor(self.forecolorbox.color)
         dlg.exec_()
         config["customColor"] = dlg.config
-        if dlg.result() == QtGui.QDialog.Accepted:
+        if dlg.result() == QtWidgets.QDialog.Accepted:
             self.forecolorbox.color = dlg.currentColor()
 
 
-class SetOrigineDialog(QtGui.QDialog):
+class SetOrigineDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(SetOrigineDialog, self).__init__(parent)
+ 
+        f = QtGui.QFont(defaultfontname, 9)
+        self.setFont(f)
+
         self.setWindowTitle("座標設定")
 
-        promptlabel = QtGui.QLabel(self)
+        promptlabel = QtWidgets.QLabel(self)
         promptlabel.setAlignment(
             QtCore.Qt.AlignVCenter | QtCore.Qt.AlignLeft)
         promptlabel.setText("この地点の座標を入力してください。")
 
-        self.currentlabel = QtGui.QLabel(self)
+        self.currentlabel = QtWidgets.QLabel(self)
         self.currentlabel.setAlignment(
             QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
         self.currentlabel.setText("")
 
-        xlabel = QtGui.QLabel(self)
+        xlabel = QtWidgets.QLabel(self)
         xlabel.setAlignment(
             QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
         xlabel.setText("&X")
 
-        self.xbox = QtGui.QSpinBox(self)
+        self.xbox = QtWidgets.QSpinBox(self)
         self.xbox.setRange(-999, +999)
         self.xbox.setSingleStep(1)
         self.xbox.setValue(0)
         xlabel.setBuddy(self.xbox)
 
-        ylabel = QtGui.QLabel(self)
+        ylabel = QtWidgets.QLabel(self)
         ylabel.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
         ylabel.setText("&Y")
 
-        self.ybox = QtGui.QSpinBox(self)
+        self.ybox = QtWidgets.QSpinBox(self)
         self.ybox.setRange(-999, +999)
         self.ybox.setSingleStep(1)
         self.ybox.setValue(0)
         ylabel.setBuddy(self.ybox)
 
-        self.buttonbox = QtGui.QDialogButtonBox(
-            QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        self.buttonbox = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self.buttonbox.accepted.connect(self.accept)
         self.buttonbox.rejected.connect(self.reject)
-        self.buttonbox.button(QtGui.QDialogButtonBox.Ok).setText("OK")
-        self.buttonbox.button(QtGui.QDialogButtonBox.Cancel).setText("キャンセル")
+        self.buttonbox.button(QtWidgets.QDialogButtonBox.Ok).setText("OK")
+        self.buttonbox.button(QtWidgets.QDialogButtonBox.Cancel).setText("キャンセル")
 
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         layout.addWidget(promptlabel, 0, 0, 1, 4)
         layout.addWidget(self.currentlabel, 1, 0, 1, 4)
         layout.addWidget(xlabel, 2, 0, 1, 1)
@@ -827,64 +839,68 @@ class SetOrigineDialog(QtGui.QDialog):
         return self.ybox.value()
 
 
-class SetSizeDialog(QtGui.QDialog):
+class SetSizeDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(SetSizeDialog, self).__init__(parent)
+
+        f = QtGui.QFont(defaultfontname, 9)
+        self.setFont(f)
+
         self.setWindowTitle("マップのサイズ")
 
-        self.topbutton = QtGui.QRadioButton(self)
+        self.topbutton = QtWidgets.QRadioButton(self)
         self.topbutton.setText("上(&T)")
         self.topbutton.clicked.connect(self.updatewidgets)
 
-        self.topsize = QtGui.QSpinBox(self)
+        self.topsize = QtWidgets.QSpinBox(self)
         self.topsize.setSingleStep(1)
         self.topsize.setValue(0)
         self.topsize.valueChanged.connect(self.updatewidgets)
 
-        self.bottombutton = QtGui.QRadioButton(self)
+        self.bottombutton = QtWidgets.QRadioButton(self)
         self.bottombutton.setText("下(&B)")
         self.bottombutton.clicked.connect(self.updatewidgets)
 
-        self.bottomsize = QtGui.QSpinBox(self)
+        self.bottomsize = QtWidgets.QSpinBox(self)
         self.bottomsize.setSingleStep(1)
         self.bottomsize.setValue(0)
         self.bottomsize.valueChanged.connect(self.updatewidgets)
 
-        self.leftbutton = QtGui.QRadioButton(self)
+        self.leftbutton = QtWidgets.QRadioButton(self)
         self.leftbutton.setText("左(&L)")
         self.leftbutton.clicked.connect(self.updatewidgets)
 
-        self.leftsize = QtGui.QSpinBox(self)
+        self.leftsize = QtWidgets.QSpinBox(self)
         self.leftsize.setSingleStep(1)
         self.leftsize.setValue(0)
         self.leftsize.valueChanged.connect(self.updatewidgets)
 
-        self.rightbutton = QtGui.QRadioButton(self)
+        self.rightbutton = QtWidgets.QRadioButton(self)
         self.rightbutton.setText("右(&R)")
         self.rightbutton.clicked.connect(self.updatewidgets)
 
-        self.rightsize = QtGui.QSpinBox(self)
+        self.rightsize = QtWidgets.QSpinBox(self)
         self.rightsize.setSingleStep(1)
         self.rightsize.setValue(0)
         self.rightsize.valueChanged.connect(self.updatewidgets)
 
-        self.sizelabel = QtGui.QLabel(self)
+        self.sizelabel = QtWidgets.QLabel(self)
         self.sizelabel .setAlignment(
             QtCore.Qt.AlignVCenter | QtCore.Qt.AlignLeft)
         self.sizelabel.setText("この地点の座標を入力してください。")
 
-        self.buttonbox = QtGui.QDialogButtonBox(
-        QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        self.buttonbox = QtWidgets.QDialogButtonBox(
+        QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self.buttonbox.accepted.connect(self.accept)
         self.buttonbox.rejected.connect(self.reject)
-        self.buttonbox.button(QtGui.QDialogButtonBox.Ok).setText("OK")
-        self.buttonbox.button(QtGui.QDialogButtonBox.Cancel).setText("キャンセル")
+        self.buttonbox.button(QtWidgets.QDialogButtonBox.Ok).setText("OK")
+        self.buttonbox.button(QtWidgets.QDialogButtonBox.Cancel).setText("キャンセル")
 
-        verticalgroup = QtGui.QButtonGroup(self)
+        verticalgroup = QtWidgets.QButtonGroup(self)
         verticalgroup.addButton(self.topbutton)
         verticalgroup.addButton(self.bottombutton)
 
-        holizontalgroup = QtGui.QButtonGroup(self)
+        holizontalgroup = QtWidgets.QButtonGroup(self)
         holizontalgroup.addButton(self.leftbutton)
         holizontalgroup.addButton(self.rightbutton)
 
@@ -893,7 +909,7 @@ class SetSizeDialog(QtGui.QDialog):
         self.leftbutton.setChecked(True)
         self.rightbutton.setChecked(False)
 
-        layout = QtGui.QGridLayout(self)
+        layout = QtWidgets.QGridLayout(self)
         layout.addWidget(self.topbutton, 0, 2, 1, 1)
         layout.addWidget(self.topsize, 0, 3, 1, 1)
         layout.addWidget(self.leftbutton, 1, 0, 1, 1)
@@ -1386,20 +1402,21 @@ class UndoManager(QtCore.QObject):
         return self._commited
 
 
-class PydunColorDialog(QtGui.QColorDialog):
+class PydunColorDialog(QtWidgets.QColorDialog):
     def __init__(self, parent, config):
         super(PydunColorDialog, self).__init__(parent)
+        f = QtGui.QFont(defaultfontname, 9)
+        self.setFont(f)
         for index in range(self.customCount()):
             self.setCustomColor(index,
                 getcolorfromstring(
-                    config.get(index, "#FFFFFF")).rgb())
+                    config.get(index, "#FFFFFF")))
         self.updateconfig()
 
     def updateconfig(self):
         self._config = dict()
         for index in range(self.customCount()):
-            self._config[index] = getcolorstring(
-                QtGui.QColor.fromRgb(self.customColor(index)))
+            self._config[index] = getcolorstring(self.customColor(index))
 
     def exec_(self):
         super(PydunColorDialog, self).exec_()
@@ -1410,15 +1427,17 @@ class PydunColorDialog(QtGui.QColorDialog):
         return self._config
 
 
-class PydunAskSaveDialog(QtGui.QMessageBox):
+class PydunAskSaveDialog(QtWidgets.QMessageBox):
     def __init__(self, parent, filename):
         super(PydunAskSaveDialog, self).__init__(parent)
+        f = QtGui.QFont(defaultfontname, 9)
+        self.setFont(f)
         self.setText("{filename} への変更を保存しますか?".format(filename=filename))
-        self.setStandardButtons(QtGui.QMessageBox.Save | QtGui.QMessageBox.Discard | QtGui.QMessageBox.Cancel)
-        self.setDefaultButton(QtGui.QMessageBox.Save)
-        self.button(QtGui.QMessageBox.Save).setText("保存する(&S)")
-        self.button(QtGui.QMessageBox.Discard).setText("保存しない(&N)")
-        self.button(QtGui.QMessageBox.Cancel).setText("キャンセル")
+        self.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel)
+        self.setDefaultButton(QtWidgets.QMessageBox.Save)
+        self.button(QtWidgets.QMessageBox.Save).setText("保存する(&S)")
+        self.button(QtWidgets.QMessageBox.Discard).setText("保存しない(&N)")
+        self.button(QtWidgets.QMessageBox.Cancel).setText("キャンセル")
 
 
 def getcolorstring(color):
@@ -1448,7 +1467,7 @@ def getlatestversion():
 
 def main():
     loadconfig()
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     mainWin = MainWindow()
     app.installEventFilter(mainWin.centralWidget().mapframe)
     mainWin.show()
