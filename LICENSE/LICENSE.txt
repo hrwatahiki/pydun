@@ -2,7 +2,7 @@ pydun.py はMIT Licenseです。要約すると、自由に使っていいです
 
 ライセンス本文
 --------------------------------------------------------------------------------
-Copyright (c) 2013-2019 WATAHIKI Hiroyuki
+Copyright (c) 2013-2020 WATAHIKI Hiroyuki
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -26,24 +26,24 @@ SOFTWARE.
 
 pydun.exeは以下のソフトウェアを改変せずに使用しています。
 
-Python 3.7.3
-Copyright 1990-2019, Python Software Foundation.
+Python 3.8.1
+Copyright 2001-2019, Python Software Foundation.
 https://www.python.org/
 License: PSF (LICENSE_Python.txt)
 
-Qt for Python(PySide2) 5.12.3
+Qt for Python(PySide2) 5.14.1
 Author: Qt for Python Team
 https://wiki.qt.io/Qt_for_Python
 License: LGPL version 3.0 (LICENSE_PySide2.txt)
 
-PyYAML 5.1
+PyYAML 5.3.1
 Author: Ingy döt Net, Kirill Simonov
 https://pyyaml.org/
 License: MIT (LICENSE_PyYAML.txt)
 
 また、pydun.exeの実行ファイル作成には以下のソフトウェアを使用しています。
 
-pyinstaller v3.4
+pyinstaller v3.6
 http://www.pyinstaller.org/
 
 

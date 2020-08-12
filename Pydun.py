@@ -25,7 +25,7 @@ _undomanager = None
 
 projecturl = "http://ja.osdn.net/projects/pydun/"
 projectrssurl = "http://ja.osdn.net/projects/pydun/releases/rss"
-projectversion = "1.2.0"
+projectversion = "1.2.1"
 defaultfontname = "Yu Gothic UI"
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -439,9 +439,10 @@ class MainFrame(QtWidgets.QFrame):
         #座標設定モード
         if self.mapframe.setoriginemode:
             dlg = SetOrigineDialog(self)
-            dlg.setcurrent(_mapengine.viewx(x1), _mapengine.viewy(y1))
+            dlg.setcurrent(_mapengine.viewx(x1), _mapengine.viewy(y1), _mapengine.signx, _mapengine.signy)
             dlg.exec_() #showでは処理がとまらない。
             if dlg.result() == QtWidgets.QDialog.Accepted:
+                _mapengine.setsign(dlg.signx, dlg.signy)
                 _mapengine.setoffset(
                     dlg.originex - _mapengine.viewx(x1) + _mapengine.offsetx,
                     dlg.originey - _mapengine.viewy(y1) + _mapengine.offsety
@@ -779,7 +780,7 @@ class SetOrigineDialog(QtWidgets.QDialog):
         promptlabel = QtWidgets.QLabel(self)
         promptlabel.setAlignment(
             QtCore.Qt.AlignVCenter | QtCore.Qt.AlignLeft)
-        promptlabel.setText("この地点の座標を入力してください。")
+        promptlabel.setText("この地点の座標と軸の方向を入力してください。")
 
         self.currentlabel = QtWidgets.QLabel(self)
         self.currentlabel.setAlignment(
@@ -807,6 +808,23 @@ class SetOrigineDialog(QtWidgets.QDialog):
         self.ybox.setValue(0)
         ylabel.setBuddy(self.ybox)
 
+        self.xplusbutton = QtWidgets.QRadioButton(self)
+        self.xplusbutton.setText("右が正(&R)")
+        self.xminusbutton = QtWidgets.QRadioButton(self)
+        self.xminusbutton.setText("左が正(&L)")
+        self.yminusbutton = QtWidgets.QRadioButton(self)
+        self.yminusbutton.setText("上が正(&T)")
+        self.yplusbutton = QtWidgets.QRadioButton(self)
+        self.yplusbutton.setText("下が正(&B)")
+
+        xgroup = QtWidgets.QButtonGroup(self)
+        xgroup.addButton(self.xplusbutton)
+        xgroup.addButton(self.xminusbutton)
+
+        ygroup = QtWidgets.QButtonGroup(self)
+        ygroup.addButton(self.yplusbutton)
+        ygroup.addButton(self.yminusbutton)
+
         self.buttonbox = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self.buttonbox.accepted.connect(self.accept)
@@ -821,14 +839,26 @@ class SetOrigineDialog(QtWidgets.QDialog):
         layout.addWidget(self.xbox, 2, 1, 1, 1)
         layout.addWidget(ylabel, 2, 2, 1, 1)
         layout.addWidget(self.ybox, 2, 3, 1, 1)
-        layout.addWidget(self.buttonbox, 3, 0, 1, 4)
+        layout.addWidget(self.xplusbutton, 3, 1, 1, 1)
+        layout.addWidget(self.xminusbutton, 4, 1, 1, 1)
+        layout.addWidget(self.yminusbutton, 3, 3, 1, 1)
+        layout.addWidget(self.yplusbutton, 4, 3, 1, 1)
+        layout.addWidget(self.buttonbox, 5, 0, 1, 4)
         self.setLayout(layout)
         self.setModal(True)
 
-    def setcurrent(self, x, y):
+    def setcurrent(self, x, y, signx, signy):
         self.xbox.setValue(x)
         self.ybox.setValue(y)
         self.currentlabel.setText("現在の座標 ({x}, {y})".format(x=x, y=y))
+        if signx == 1:
+            self.xplusbutton.setChecked(True)
+        elif signx == -1:
+            self.xminusbutton.setChecked(True)
+        if signy == 1:
+            self.yplusbutton.setChecked(True)
+        elif signy == -1:
+            self.yminusbutton.setChecked(True)
 
     @property
     def originex(self):
@@ -837,6 +867,24 @@ class SetOrigineDialog(QtWidgets.QDialog):
     @property
     def originey(self):
         return self.ybox.value()
+
+    @property
+    def signx(self):
+        if self.xplusbutton.isChecked():
+            return 1
+        elif self.xminusbutton.isChecked():
+            return -1
+        else:
+            return 0
+
+    @property
+    def signy(self):
+        if self.yplusbutton.isChecked():
+            return 1
+        elif self.yminusbutton.isChecked():
+            return -1
+        else:
+            return 0
 
 
 class SetSizeDialog(QtWidgets.QDialog):
@@ -1095,6 +1143,10 @@ class MapEngine(object):
     def setoffset(self, x, y):
         self._offsetx = x
         self._offsety = y
+
+    def setsign(self, signx, signy):
+        self._signx = signx
+        self._signy = signy
 
     def getmark(self, x, y):
         return self.unescape(self.getnote(x, y)["mark"])
